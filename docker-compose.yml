@@ -1,0 +1,5 @@
+version: '3.9'
+services:
+  # Define aquí MySQL y backend para desarrollo
+  # db:
+  # backend:
