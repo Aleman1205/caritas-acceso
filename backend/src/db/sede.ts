@@ -1,10 +1,10 @@
 import type { Pool, ResultSetHeader } from "mysql2/promise";
-import type Sede from "../types/db/Sede.ts"
+import type { Sede, SedeDTO } from "../types/db/Sede.ts"
 
 export default class SedeDbService {
     constructor(private db: Pool) {}
     
-    public async createSede(sede: Sede): Promise<boolean> {
+    public async createSede(sede: SedeDTO): Promise<boolean> {
         const [result] = await this.db.query<ResultSetHeader>(
             "INSERT INTO Sede (Ubicacion, Descripcion, HoraInicio, HoraFinal) VALUES (?, ?)",
             [sede.Ubicacion, sede.Descripcion, sede.HoraInicio, sede.HoraFinal]
@@ -12,6 +12,7 @@ export default class SedeDbService {
         return result.affectedRows > 0;
     }
 
+    // Recordar el formato de la fecha 'HH-MM-SS'
     public async getSedes(filtros?: Partial<Sede>): Promise<Sede[]> {
         const campos = Object.keys(filtros || {});
         const valores = Object.values(filtros || {});
@@ -59,5 +60,4 @@ export default class SedeDbService {
         const [result] = await this.db.query<ResultSetHeader>(query, valores);
         return result.affectedRows > 0;
     }
-
 }
