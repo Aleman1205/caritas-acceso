@@ -1,37 +1,63 @@
-import type { Pool } from "mysql2/promise";
+import type { Pool, ResultSetHeader } from "mysql2/promise";
 import type Sede from "../types/db/Sede.ts"
 
 export default class SedeDbService {
     constructor(private db: Pool) {}
     
-    public async crearSede(sede: Sede): Promise<void> {
-        await this.db.query(
+    public async createSede(sede: Sede): Promise<boolean> {
+        const [result] = await this.db.query<ResultSetHeader>(
             "INSERT INTO Sede (Ubicacion, Descripcion, HoraInicio, HoraFinal) VALUES (?, ?)",
             [sede.Ubicacion, sede.Descripcion, sede.HoraInicio, sede.HoraFinal]
         );
+        return result.affectedRows > 0;
     }
 
-    public async getSedes(): Promise<Sede[]> {
-        const [rows] = await this.db.query<Sede[]>(
-            "SELECT * FROM Sede"
-        );
+    public async getSedes(filtros?: Partial<Sede>): Promise<Sede[]> {
+        const campos = Object.keys(filtros || {});
+        const valores = Object.values(filtros || {});
+
+        let query = "SELECT * FROM Sede";
+        if (campos.length > 0) {
+            const whereClause = campos.map(campo => `${campo} = ?`).join(" AND ");
+            query += ` WHERE ${whereClause}`;
+        }
+
+        const [rows] = await this.db.query<Sede[]>(query, valores);
         return rows;
     }
+
     
-    // Recordar que HoraInicio y HoraFinal usan TIME 'HH:MM:SS'
-    public async getSedesPorHorario(HoraInicio: string, HoraFinal: string): Promise<Sede[]> {
-        const [rows] = await this.db.query<Sede[]>(
-            "SELECT * FROM Sede WHERE HoraInicio = ? AND HoraFinal ?",
-            [HoraInicio, HoraFinal]
+    public async updateSede(Id: number, cambios: Partial<Sede>): Promise<boolean> {
+        const campos = Object.keys(cambios);
+        const valores = Object.values(cambios);
+
+        if (campos.length === 0) return false;
+
+        const setClause = campos.map(campo => `${campo} = ?`).join(", ");
+
+        const [result] = await this.db.query<ResultSetHeader>(
+            `UPDATE Sede 
+            SET ${setClause} 
+            WHERE Id = ?`,
+            [...valores, Id]
         );
-        return rows;
+
+        return result.affectedRows > 0;
     }
 
-    public async getSedePorId(Id: number): Promise<Sede | null> {
-        const [rows] = await this.db.query<Sede[]>(
-            "SELECT * FROM Sede WHERE Id = ?",
-            [Id]
-        );
-        return rows[0] ?? null;
+    public async deleteSede(filtros: Partial<Sede>): Promise<boolean> {
+        const campos = Object.keys(filtros);
+        const valores = Object.values(filtros);
+
+        if (campos.length === 0) {
+            throw new Error("Debe especificar al menos un filtro para eliminar.");
+        }
+
+        const whereClause = campos.map(campo => `${campo} = ?`).join(" AND ");
+        const query = `DELETE FROM Sede WHERE ${whereClause}`;
+
+        const [result] = await this.db.query<ResultSetHeader>(query, valores);
+        return result.affectedRows > 0;
     }
+
 }
