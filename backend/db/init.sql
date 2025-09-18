@@ -17,6 +17,8 @@ CREATE TABLE `Usuario` (
 CREATE TABLE `Sede` (
   `Id` INT AUTO_INCREMENT PRIMARY KEY,
   `Ubicacion` VARCHAR(400),
+  `HoraInicio` TIME NOT NULL,
+  `HoraFinal` TIME NOT NULL,
   `Descripcion` VARCHAR(100)
 );
 
@@ -38,6 +40,8 @@ CREATE TABLE `SedeServicio` (
   `Descripcion` VARCHAR(100),
   `Capacidad` INT,
   `Precio` INT,
+  `HoraInicio` TIME,
+  `HoraFinal` TIME,
   PRIMARY KEY (`IdSede`, `IdServicio`)
 );
 
