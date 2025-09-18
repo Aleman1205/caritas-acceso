@@ -1,21 +1,53 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
-export default function Home() {
+export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100">
-      <Card className="p-6 max-w-sm w-full space-y-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#0f172a]">
+      <Card className="w-full max-w-md p-6 bg-[#1e293b] text-white shadow-lg rounded-2xl border-0">
+        <CardHeader>
+          <CardTitle className="text-center text-2xl font-bold">
+            Bienvenido
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          <h1 className="text-2xl font-bold mb-4">shadcn + Tailwind ✅</h1>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" placeholder="you@example.com" />
-          </div>
-          <Button className="w-full mt-4">Submit</Button>
+          <form className="space-y-4">
+            <div>
+              <Label htmlFor="email">Correo</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Correo"
+                className="bg-[#0f172a] text-white border-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Contraseña</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Contraseña"
+                className="bg-[#0f172a] text-white border-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Iniciar sesión
+            </Button>
+          </form>
+          <p className="mt-4 text-center text-sm text-gray-400">
+            No tienes cuenta?{" "}
+            <Link href="/register" className="text-blue-400 hover:underline">
+              Crear una
+            </Link>
+          </p>
         </CardContent>
       </Card>
-    </main>
-  );
+    </div>
+  )
 }
