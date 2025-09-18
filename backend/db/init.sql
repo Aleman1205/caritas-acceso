@@ -1,41 +1,41 @@
 -- MYSQL 
 CREATE TABLE `TipoUsuario` (
-  `Id` INT PRIMARY KEY,
-  `Descripcion` NVARCHAR(100)
+  `Id` INT AUTO_INCREMENT PRIMARY KEY,
+  `Descripcion` VARCHAR(100)
 );
 
 CREATE TABLE `Usuario` (
-  `Email` NVARCHAR(300) PRIMARY KEY,
+  `Email` VARCHAR(300) AUTO_INCREMENT PRIMARY KEY,
   `Telefono` VARCHAR(25),
-  `Nombre` NVARCHAR(70),
-  `Apellido` NVARCHAR(50),
+  `Nombre` VARCHAR(70),
+  `Apellido` VARCHAR(50),
   `FotoUrl` varbinary(MAX),
   `FechaNacimiento` DATE,
   `IdTipoUsuario` INT
 );
 
 CREATE TABLE `Sede` (
-  `Id` INT PRIMARY KEY,
-  `Ubicacion` NVARCHAR(400),
-  `Descripcion` NVARCHAR(100)
+  `Id` INT AUTO_INCREMENT PRIMARY KEY,
+  `Ubicacion` VARCHAR(400),
+  `Descripcion` VARCHAR(100)
 );
 
 CREATE TABLE `UsuarioSede` (
-  `Email` NVARCHAR(300),
+  `Email` VARCHAR(300),
   `IdSede` INT,
   PRIMARY KEY (`Email`, `IdSede`)
 );
 
 CREATE TABLE `Servicio` (
-  `Id` INT PRIMARY KEY,
-  `Descripcion` NVARCHAR(100),
+  `Id` INT AUTO_INCREMENT PRIMARY KEY,
+  `Descripcion` VARCHAR(100),
   `Estatus` BIT
 );
 
 CREATE TABLE `SedeServicio` (
   `IdSede` INT,
   `IdServicio` INT,
-  `Descripcion` NVARCHAR(100),
+  `Descripcion` VARCHAR(100),
   `Capacidad` INT,
   `Precio` INT,
   PRIMARY KEY (`IdSede`, `IdServicio`)
@@ -65,9 +65,9 @@ CREATE TABLE `Compra` (
 CREATE TABLE `Beneficiario` (
   `Telefono` VARCHAR(25),
   `IdTransaccion` VARCHAR(200),
-  `Nombre` NVARCHAR(70),
-  `Apellido` NVARCHAR(50),
-  `Email` NVARCHAR(300),
+  `Nombre` VARCHAR(70),
+  `Apellido` VARCHAR(50),
+  `Email` VARCHAR(300),
   PRIMARY KEY (`Telefono`, `IdTransaccion`)
 );
 
