@@ -16,3 +16,5 @@ router.post("/", handler.crearSede.bind(handler));
 router.get("/:Id?", handler.getSede.bind(handler));
 router.put("/:Id", handler.updateSede.bind(handler));
 router.delete("/", handler.deleteSedes.bind(handler));
+
+export default router;
