@@ -1,14 +1,16 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-
 export function LoginForm({
     className,
     ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+
   return (
     <div>
       <Card className="w-full max-w-md p-6 bg-[#1e293b] text-white shadow-lg rounded-2xl border-0">
@@ -45,11 +47,8 @@ export function LoginForm({
                 className="bg-[#0f172a] text-white border-none focus-visible:ring-2 focus-visible:ring-blue-500"
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Iniciar sesión
+            <Button asChild className="w-full bg-blue-600 hpver:bg-blue-700 text-white">
+              <Link href="/home">Iniciar sesión</Link>
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-gray-400">
