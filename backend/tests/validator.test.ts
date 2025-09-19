@@ -1,4 +1,4 @@
-import { isSedeBody, isSedeQuery, isSedeParam, isSedeBodyIds } from "../src/types/validadores/requests/sede.js";
+import { isSedeBody, isSedeQuery, isSedeParam, isSedeBodyIds } from "../src/types/validadores/requests/sede";
 
 describe("Validadores Sede", () => {
     it("isSedeBody válido", () => {

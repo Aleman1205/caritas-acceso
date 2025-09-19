@@ -1,4 +1,4 @@
-import { mapQueryToSedeDTO } from "../src/utils/mappers.js";
+import { mapQueryToSedeDTO } from "../src/utils/mappers";
 
 describe("mapQueryToSedeDTO", () => {
   it("convierte Id string a number", () => {

@@ -1,6 +1,6 @@
-import SedeController from "../src/controllers/sede.js";
-import type SedeDbService from "../src/db/sede.js";
-import type { SedeDTO, Sede } from "../src/types/db/Sede.js";
+import SedeController from "../src/controllers/sede";
+import type SedeDbService from "../src/db/sede";
+import type { SedeDTO, Sede } from "../src/types/db/Sede";
 
 describe("SedeController", () => {
     let service: jest.Mocked<SedeDbService>;

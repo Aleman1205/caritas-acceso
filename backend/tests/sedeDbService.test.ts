@@ -1,4 +1,4 @@
-import SedeDbService from "../src/db/sede.js";
+import SedeDbService from "../src/db/sede";
 import type { Pool } from "mysql2/promise";
 
 describe("SedeDbService", () => {
