@@ -1,13 +1,12 @@
 import express from "express";
-
+import sedeRoutes from "./routes/sede.js"
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(express.json());
 
-app.use("/api/sedes");
+app.use("/api/sedes", sedeRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running at PORT ${PORT}`);
+const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running at PORT ${PORT}`);
 });
