@@ -16,7 +16,9 @@ CREATE TABLE `Usuario` (
 
 CREATE TABLE `Sede` (
   `Id` INT AUTO_INCREMENT PRIMARY KEY,
+  `Nombre` VARCHAR(100),
   `Ubicacion` VARCHAR(400),
+  `Ciudad` VARCHAR(100),
   `HoraInicio` TIME NOT NULL,
   `HoraFinal` TIME NOT NULL,
   `Descripcion` VARCHAR(100)

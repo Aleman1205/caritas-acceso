@@ -1,63 +1,77 @@
 import type { Pool, ResultSetHeader } from "mysql2/promise";
-import type { Sede, SedeDTO } from "../types/db/Sede.ts"
+import type { Sede, SedeDTO } from "../types/db/Sede.js";
+
+const ALLOWED_FIELDS = ["Id", "Nombre", "Ubicacion", "Ciudad", "HoraInicio", "HoraFinal", "Descripcion"] as const;
+const ALLOWED_UPDATE_FIELDS = ["Nombre", "Ubicacion", "Ciudad", "HoraInicio", "HoraFinal", "Descripcion"] as const; // para nunca actualizar "Id"
+
+type AllowedField = typeof ALLOWED_FIELDS[number];
+type AllowedUpdateField = typeof ALLOWED_UPDATE_FIELDS[number];
 
 export default class SedeDbService {
-    constructor(private db: Pool) {}
-    
-    public async createSede(sede: SedeDTO): Promise<boolean> {
-        const [result] = await this.db.query<ResultSetHeader>(
-            "INSERT INTO Sede (Ubicacion, Descripcion, HoraInicio, HoraFinal) VALUES (?, ?)",
-            [sede.Ubicacion, sede.Descripcion, sede.HoraInicio, sede.HoraFinal]
-        );
-        return result.affectedRows > 0;
-    }
+	constructor(private db: Pool) {}
 
-    // Recordar el formato de la fecha 'HH-MM-SS'
-    public async getSedes(filtros?: Partial<Sede>): Promise<Sede[]> {
-        const campos = Object.keys(filtros || {});
-        const valores = Object.values(filtros || {});
+	// Crea una sede. Requiere formato TIME 'HH:MM:SS'
+	public async createSede(sede: SedeDTO): Promise<boolean> {
+		const [result] = await this.db.query<ResultSetHeader>(
+			`INSERT INTO Sede (Nombre, Ubicacion, Ciudad, HoraInicio, HoraFinal, Descripcion)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+			[sede.Nombre, sede.Ubicacion, sede.Ciudad, sede.HoraInicio, sede.HoraFinal, sede.Descripcion ?? null]
+		);
+		return result.affectedRows > 0;
+	}
 
-        let query = "SELECT * FROM Sede";
-        if (campos.length > 0) {
-            const whereClause = campos.map(campo => `${campo} = ?`).join(" AND ");
-            query += ` WHERE ${whereClause}`;
-        }
+	// Lista sedes con filtros whitelisteados
+	public async getSedes(filtros?: Partial<SedeDTO>): Promise<Sede[]> {
+		const clean = Object.entries(filtros || {})
+			.filter(([campo, value]) => (ALLOWED_FIELDS as readonly string[]).includes(campo) && value !== undefined && value !== null && value !== "");
 
-        const [rows] = await this.db.query<Sede[]>(query, valores);
-        return rows;
-    }
+		const campos = clean.map(([campo]) => campo as AllowedField);
+		const valores = clean.map(([_, value]) => value);
 
-    
-    public async updateSede(Id: number, cambios: Partial<Sede>): Promise<boolean> {
-        const campos = Object.keys(cambios);
-        const valores = Object.values(cambios);
+		let query = "SELECT * FROM Sede";
+		if (campos.length > 0) {
+			const whereClause = campos.map(campo => `${campo} = ?`).join(" AND ");
+			query += ` WHERE ${whereClause}`;
+		}
 
-        if (campos.length === 0) return false;
+		const [rows] = await this.db.query<Sede[]>(query, valores);
+		return rows;
+	}
 
-        const setClause = campos.map(campo => `${campo} = ?`).join(", ");
+	// Actualiza campos permitidos; ignora vacíos
+	public async updateSede(Id: number, cambios: Partial<SedeDTO>): Promise<boolean> {
+		const clean = Object.entries(cambios || {})
+			.filter(([campo, value]) =>
+				(ALLOWED_UPDATE_FIELDS as readonly string[]).includes(campo) && value !== undefined && value !== null && value !== ""
+			);
 
-        const [result] = await this.db.query<ResultSetHeader>(
-            `UPDATE Sede 
-            SET ${setClause} 
-            WHERE Id = ?`,
-            [...valores, Id]
-        );
+		if (clean.length === 0) return false;
 
-        return result.affectedRows > 0;
-    }
+		const campos = clean.map(([campo]) => campo as AllowedUpdateField);
+		const valores = clean.map(([_, value]) => value);
 
-    public async deleteSede(filtros: Partial<Sede>): Promise<boolean> {
-        const campos = Object.keys(filtros);
-        const valores = Object.values(filtros);
+		const setClause = campos.map(campo => `${campo} = ?`).join(", ");
 
-        if (campos.length === 0) {
-            throw new Error("Debe especificar al menos un filtro para eliminar.");
-        }
+		const [result] = await this.db.query<ResultSetHeader>(
+			`UPDATE Sede SET ${setClause} WHERE Id = ?`,
+			[...valores, Id]
+		);
 
-        const whereClause = campos.map(campo => `${campo} = ?`).join(" AND ");
-        const query = `DELETE FROM Sede WHERE ${whereClause}`;
+		return result.affectedRows > 0;
+	}
 
-        const [result] = await this.db.query<ResultSetHeader>(query, valores);
-        return result.affectedRows > 0;
-    }
+	// Elimina múltiples ids válidos (>0)
+	public async deleteSedes(ids: number[]): Promise<number> {
+		const cleanIds = (ids || []).filter(
+			(id): id is number => typeof id === "number" && Number.isInteger(id) && id > 0
+		);
+		if (cleanIds.length === 0) return 0;
+
+		const placeholders = cleanIds.map(() => "?").join(", ");
+		const [result] = await this.db.query<ResultSetHeader>(
+			`DELETE FROM Sede WHERE Id IN (${placeholders})`,
+			cleanIds
+		);
+		return result.affectedRows;
+	}
 }
