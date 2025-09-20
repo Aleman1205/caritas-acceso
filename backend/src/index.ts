@@ -1,6 +1,6 @@
 import express from "express";
 import sedeRoutes from "./routes/sede.js"
-import serviciosRoutes from "./routes/servicio.js"
+import servicioRoutes from "./routes/servicio.js"
 
 const app = express();
 app.use(express.json());
