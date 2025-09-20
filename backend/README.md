@@ -1,5 +1,12 @@
 # Backend (API + modelo de datos)
-- `src/`: código fuente
-- `db/`: scripts SQL (init, seeds, migraciones)
-- `tests/`: pruebas
-- `src/types/db`: interfaces para relaciones de SQL
+- `db/`: scripts SQL (init, seeds, migraciones, stored_procedures).
+- `src/`: código fuente.
+- `src/config`: configuracion de servicios externos (base de datos).
+- `src/controllers`: capa de lógica de negocio para pasar a la comunicación con la base de datos.
+- `src/db`: capa de comunicación con la base de datos (queries SQL).
+- `src/handlers`: capa de HTTP handler (validación de Request params, query y body) para pasar a lógica de negocio.
+- `src/routes`: definición de endpoints con métodos HTTP.
+- `src/types/db`: interfaces para relaciones de SQL.
+- `src/types/requests`: interfaces para Request HTTP específicos por relación.
+- `src/utils`: funciones helper.
+- `tests/`: pruebas.
