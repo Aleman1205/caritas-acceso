@@ -1,74 +1,23 @@
 import type { Request, Response, NextFunction } from "express";
 import SedeController from "../controllers/sede.js";
-import { isSedeBody, isSedeQuery, isSedeParam, isSedeBodyIds } from "../types/validadores/requests/sede.js";
-import withDefaults from "./filler.js";
-import { defaultSede, type SedeDTO } from "../types/db/Sede.js";
-import { mapQueryToSedeDTO } from "../utils/mappers.js";
+import withDefaults from "../utils/filler.js";
+import { defaultSede, type Sede } from "../types/db/Sede.js";
+import BaseHttpHandler from "./base.js";
+import SedeValidadorRequest from "../utils/validadores/requests/sede.js";
 
-export class SedeHttpHandler {
-	constructor(private controller: SedeController) {}
+export default class SedeHttpHandler extends BaseHttpHandler<Sede> {
+	constructor(readonly controller: SedeController, readonly validadorRequest: SedeValidadorRequest) {
+		super(controller, validadorRequest);
+	}
 
-	public async crearSede(req: Request, res: Response, next: NextFunction): Promise<void> {
+	public override async create(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
-			if (!isSedeBody(req.body)) {
+			if (!this.validadorRequest.isBody(req.body)) {
 				throw new Error("Formato del body no válido.");
 			}
-			const sede: SedeDTO = withDefaults<SedeDTO>(req.body, defaultSede);
-			const exitoso = await this.controller.crearSede(sede);
+			const sede: Sede = withDefaults<Sede>(req.body, defaultSede);
+			const exitoso = await this.controller.create(sede);
 			res.json({ exitoso });
-		} catch (error) {
-			next(error);
-		}
-	}
-
-	// GET /sedes o GET /sedes/:id
-    public async getSede(req: Request, res: Response, next: NextFunction): Promise<void> {
-        try {
-            if (!isSedeQuery(req.query)) {
-                throw new Error("Formato de query no válido.");
-            }
-            if (req.params.id !== undefined && !isSedeParam(req.params)) {
-                throw new Error("Formato de params no válido.");
-            }
-
-            const id: number | null = req.params.id ? Number(req.params.id) : null;
-            const filtros: Partial<SedeDTO> = mapQueryToSedeDTO(req.query);
-
-            const sedes = await this.controller.getSedes(id, filtros);
-            res.json({ sedes });
-        } catch (error) {
-            next(error);
-        }
-    }
-
-	// PUT /sedes/:id
-	public async updateSede(req: Request, res: Response, next: NextFunction): Promise<void> {
-		try {
-			if (!isSedeBody(req.body)) {
-				throw new Error("Formato del body no válido.");
-			}
-			if (!isSedeParam(req.params)) {
-				throw new Error("Formato de params no válido.");
-			}
-
-			const id = Number(req.params.id);
-			const cambios: Partial<SedeDTO> = req.body; // para evitar defaults en update
-			const respuesta = await this.controller.updateSede(id, cambios);
-			res.json({ respuesta });
-		} catch (error) {
-			next(error);
-		}
-	}
-
-	// DELETE /sedes
-	public async deleteSedes(req: Request, res: Response, next: NextFunction): Promise<void> {
-		try {
-			if (!isSedeBodyIds(req.body)) {
-				throw new Error("Formato del body no válido.");
-			}
-			const ids: number[] = req.body.Ids;
-			const respuesta = await this.controller.deleteSedes(ids);
-			res.json({ respuesta });
 		} catch (error) {
 			next(error);
 		}

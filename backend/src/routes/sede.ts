@@ -1,20 +1,22 @@
 import { Router } from "express";
 import SedeDbService from "../db/sede.js";
 import SedeController from "../controllers/sede.js";
-import { SedeHttpHandler } from "../handlers/sede.js";
+import SedeHttpHandler from "../handlers/sede.js";
 import { dbPool } from "../config/db/mysql.js";
+import SedeValidadorRequest from "../utils/validadores/requests/sede.js";
 
 const router = Router();
 
 // wiring de dependencias
 const service = new SedeDbService(dbPool);
 const controller = new SedeController(service);
-const handler = new SedeHttpHandler(controller);
+const validadorRequest = new SedeValidadorRequest();
+const handler = new SedeHttpHandler(controller, validadorRequest);
 
 // rutas
-router.post("/", handler.crearSede.bind(handler));
-router.get("/:Id?", handler.getSede.bind(handler));
-router.put("/:Id", handler.updateSede.bind(handler));
-router.delete("/", handler.deleteSedes.bind(handler));
+router.post("/crear", handler.create.bind(handler));
+router.get("/obtener/:Id?", handler.getAll.bind(handler));
+router.put("/modificar/:Id", handler.update.bind(handler));
+router.delete("/eliminar", handler.deleteMany.bind(handler));
 
 export default router;

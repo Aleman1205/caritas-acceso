@@ -1,11 +1,11 @@
-import type { Request } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
 import type { ParsedQs } from "qs";
+import type { Request } from "express";
 
-interface Params extends ParamsDictionary {
-	id?: string; //para convencion de express en minuscula
+export interface Params extends ParamsDictionary {
+	Id?: string; // para convencion de express en minuscula
 }
-interface Body {
+export interface Body {
 	Id?: number;
 	Nombre?: string;
 	Ubicacion?: string;
@@ -15,7 +15,7 @@ interface Body {
 	Descripcion?: string | null;
 	Ids?: number[]; // para soportar deleteSedes
 }
-interface Query extends ParsedQs {
+export interface Query extends ParsedQs {
 	Id?: string;
 	Nombre?: string;
 	Ubicacion?: string;

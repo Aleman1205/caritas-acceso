@@ -1,6 +1,4 @@
-import type { RowDataPacket } from "mysql2";
-
-export interface SedeDTO {
+export interface Sede {
 	Id?: number;
 	Nombre: string;
 	Ubicacion: string;
@@ -10,9 +8,7 @@ export interface SedeDTO {
 	Descripcion?: string | null;
 }
 
-export interface Sede extends SedeDTO, RowDataPacket {}
-
-export const defaultSede: SedeDTO = {
+export const defaultSede: Sede = {
 	Nombre: "",
 	Ubicacion: "",
 	Ciudad: "",

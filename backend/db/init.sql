@@ -32,6 +32,7 @@ CREATE TABLE `UsuarioSede` (
 
 CREATE TABLE `Servicio` (
   `Id` INT AUTO_INCREMENT PRIMARY KEY,
+  `Nombre` VARCHAR(40),
   `Descripcion` VARCHAR(100),
   `Estatus` BIT
 );
