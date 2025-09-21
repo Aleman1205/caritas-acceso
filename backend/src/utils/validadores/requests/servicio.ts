@@ -1,32 +1,31 @@
 import type { Request } from "express";
-import { isPositiveInt, isIntStringValid } from "../../isIntStringValid.js";
-import { toBoolStrict } from "../../toBoolStrict.js";
+import { isPositiveInt, isPositiveIntStringValid, isValidString } from "../../functions/typeValidation.js";
+import { toBoolStrict } from "../../functions/toBoolStrict.js";
 import BaseValidadorRequest from "./base.js";
 import type { Servicio } from "../../../types/db/Servicio.js";
 import type { ServicioRequest } from "../../../types/requests/servicio.js";
 
-export default class ServicioValidadorRequest extends BaseValidadorRequest<Servicio> {
+export default class ServicioValidador extends BaseValidadorRequest<Servicio> {
     public override isBody(obj: Request["body"]): boolean {
         return (
-
-            (obj?.Id === undefined || typeof obj?.Id === "number") &&
-            (obj?.Nombre === undefined || typeof obj?.Nombre === "string") &&
-            (obj?.Descripcion === undefined || typeof obj?.Descripcion === "string" || obj?.Descripcion === null) &&
+            (obj?.Id === undefined || (typeof obj?.Id === "number" && isPositiveInt(obj?.Id))) &&
+            (obj?.Nombre === undefined || isValidString(obj?.Nombre, 40)) &&
+            (obj?.Descripcion === undefined || isValidString(obj?.Descripcion, 100) || obj?.Descripcion === null) &&
             (obj?.Estatus === undefined || typeof obj?.Estatus === "boolean")
         );
     }
 
     public override isQuery(obj: Request["query"]): boolean {
         return (
-            (obj?.Id === undefined || (typeof obj?.Id === "string" && isIntStringValid(obj.Id))) &&
-            (obj?.Nombre === undefined || typeof obj?.Nombre === "string") &&
-            (obj?.Descripcion === undefined || typeof obj?.Descripcion === "string" || obj?.Descripcion === null) &&
+            (obj?.Id === undefined || (typeof obj?.Id === "string" && isPositiveIntStringValid(obj.Id))) &&
+            (obj?.Nombre === undefined || isValidString(obj?.Nombre, 40)) &&
+            (obj?.Descripcion === undefined || isValidString(obj?.Descripcion, 100) || obj?.Descripcion === null) &&
             (obj?.Estatus === undefined || typeof obj?.Estatus === "boolean")
         );
     }
 
     public override isParam(obj: Request["params"]): boolean {
-        return obj?.Id !== undefined && typeof obj.Id === "string" && isIntStringValid(obj.Id);
+        return obj?.Id !== undefined && typeof obj.Id === "string" && isPositiveIntStringValid(obj.Id);
     }
 
     public override isBodyIds(obj: Request["body"]): boolean {

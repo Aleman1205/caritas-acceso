@@ -5,11 +5,11 @@ CREATE TABLE `TipoUsuario` (
 );
 
 CREATE TABLE `Usuario` (
-  `Email` VARCHAR(300) AUTO_INCREMENT PRIMARY KEY,
+  `Email` VARCHAR(300) PRIMARY KEY,
   `Telefono` VARCHAR(25),
   `Nombre` VARCHAR(70),
   `Apellido` VARCHAR(50),
-  `FotoUrl` varbinary(MAX),
+  `FotoUrl` LONGBLOB,
   `FechaNacimiento` DATE,
   `IdTipoUsuario` INT
 );
@@ -41,8 +41,8 @@ CREATE TABLE `SedeServicio` (
   `IdSede` INT,
   `IdServicio` INT,
   `Descripcion` VARCHAR(100),
-  `Capacidad` INT,
-  `Precio` INT,
+  `Capacidad` DECIMAL(4,0),
+  `Precio` DECIMAL(6,2),
   `HoraInicio` TIME,
   `HoraFinal` TIME,
   PRIMARY KEY (`IdSede`, `IdServicio`)

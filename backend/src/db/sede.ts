@@ -3,17 +3,14 @@ import type { Sede } from "../types/db/Sede.js";
 import BaseDbService from "./base.js";
 
 const ALLOWED_FIELDS = ["Id", "Nombre", "Ubicacion", "Ciudad", "HoraInicio", "HoraFinal", "Descripcion"] as const;
-const ALLOWED_UPDATE_FIELDS = ["Nombre", "Ubicacion", "Ciudad", "HoraInicio", "HoraFinal", "Descripcion"] as const; // para nunca actualizar "Id"
+const ALLOWED_UPDATE_FIELDS = ["Nombre", "Ubicacion", "Ciudad", "HoraInicio", "HoraFinal", "Descripcion"] as const;
 
-type AllowedField = typeof ALLOWED_FIELDS[number];
-type AllowedUpdateField = typeof ALLOWED_UPDATE_FIELDS[number];
-
-export default class SedeDbService extends BaseDbService<Sede> {
+export default class SedeDbService extends BaseDbService<Sede, number> {
 	constructor(readonly db: Pool) {
-		super(db, "Sede", ALLOWED_FIELDS, ALLOWED_UPDATE_FIELDS)
+		super(db, "Sede", ALLOWED_FIELDS, ALLOWED_UPDATE_FIELDS, ["Id"]);
 	}
 
-	// Crea una sede. Requiere formato TIME 'HH:MM:SS'
+	// Crea una sede
 	public override async create(sede: Sede): Promise<boolean> {
 		const [result] = await this.db.query<ResultSetHeader>(
 			`CALL InsertarSedeUnica(?, ?, ?, ?, ?, ?);`,

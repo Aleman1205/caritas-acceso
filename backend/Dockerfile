@@ -1,20 +1,20 @@
-# Imagen base
+# Imagen base: trae Node 18 listo
 FROM node:18
 
-# Directorio de trabajo en el contenedor
+# Carpeta de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copia package.json primero
+# Copia package.json y package-lock.json (si existe) primero
 COPY package*.json ./
 
-# Instalcion de dependencias
+# Instala dependencias (aprovecha la cache de Docker)
 RUN npm install
 
-# Copia el resto del código
+# Copia el resto del código fuente
 COPY . .
 
-# Exponer el puerto de la app
+# Expone el puerto donde escucha la app
 EXPOSE 3000
 
-# Comando de inicio
-CMD ["npm", "run", "build && npm run start"]
+# Arranque por defecto en producción (build y start).
+CMD sh -c "npm run build && npm run start"

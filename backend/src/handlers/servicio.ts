@@ -1,14 +1,18 @@
 import type { Request, Response, NextFunction } from "express";
-import ServicioController from "../controllers/servicio.js";
-import withDefaults from "../utils/filler.js";
-import { defaultServicio, type Servicio } from "../types/db/Servicio.js";
 import BaseHttpHandler from "./base.js";
-import ServicioValidadorRequest from "../utils/validadores/requests/servicio.js";
+import { defaultServicio, type Servicio } from "../types/db/Servicio.js";
+import type ServicioController from "../controllers/servicio.js";
+import ServicioValidador from "../utils/validadores/requests/servicio.js";
+import withDefaults from "../utils/functions/withDefaultsFiller.js";
 
-export default class ServicioHttpHandler extends BaseHttpHandler<Servicio> {
-    constructor(readonly controller: ServicioController, readonly validadorRequest: ServicioValidadorRequest) {
+export default class ServicioHttpHandler extends BaseHttpHandler<Servicio, number> {
+    constructor(readonly controller: ServicioController, readonly validadorRequest: ServicioValidador) {
         super(controller, validadorRequest);
     }
+
+	protected override parseKey(params: Request["params"]): number | null {
+		return params?.Id !== undefined ? Number(params.Id) : null;
+	}
 
     public override async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {

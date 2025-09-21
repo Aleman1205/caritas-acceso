@@ -1,25 +1,24 @@
 import type { Request, Response, NextFunction } from "express";
-import SedeController from "../controllers/sede.js";
-import withDefaults from "../utils/filler.js";
-import { defaultSede, type Sede } from "../types/db/Sede.js";
 import BaseHttpHandler from "./base.js";
-import SedeValidadorRequest from "../utils/validadores/requests/sede.js";
+import type { Sede } from "../types/db/Sede.js";
+import type SedeController from "../controllers/sede.js";
+import SedeValidador from "../utils/validadores/requests/sede.js";
 
-export default class SedeHttpHandler extends BaseHttpHandler<Sede> {
-	constructor(readonly controller: SedeController, readonly validadorRequest: SedeValidadorRequest) {
+
+export default class SedeHttpHandler extends BaseHttpHandler<Sede, number> {
+	constructor(readonly controller: SedeController, readonly validadorRequest: SedeValidador) {
 		super(controller, validadorRequest);
+	}
+
+	protected override parseKey(params: Request["params"]): number | null {
+		return params?.Id !== undefined ? Number(params.Id) : null;
 	}
 
 	public override async create(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
-			if (!this.validadorRequest.isBody(req.body)) {
-				throw new Error("Formato del body no válido.");
-			}
-			const sede: Sede = withDefaults<Sede>(req.body, defaultSede);
-			const exitoso = await this.controller.create(sede);
+			if (!this.validadorRequest.isBody(req.body)) throw new Error("Formato del body no válido.");
+			const exitoso = await this.controller.create(req.body as Sede);
 			res.json({ exitoso });
-		} catch (error) {
-			next(error);
-		}
+		} catch (error) { next(error); }
 	}
 }

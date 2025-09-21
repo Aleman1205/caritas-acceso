@@ -1,21 +1,27 @@
 import type BaseDbService from "../db/base.js";
+import type { Key } from "../types/key.js";
+import { isPrimitiveKey } from "../types/key.js";
 
-export default abstract class BaseController<T> {
-    constructor(protected dbService: BaseDbService<T>) {}
+export default abstract class BaseController<T, K extends Key = number> {
+    constructor(protected dbService: BaseDbService<T, K>) {}
 
     public abstract create(objeto: T): Promise<boolean>;
 
-    // Puede obtener uno con el ID unicamente y/o los atributos
-    public async getAll(id: number | null, datos: Partial<T>): Promise<T[]> {
-        const filtros = id !== null ? { Id: id, ...datos } : datos;
-        return this.dbService.getAll(filtros);
+    public async getAll(id: K | null, datos: Partial<T>): Promise<T[]> {
+        let filtros: Partial<T> = datos || {};
+        if (id !== null && id !== undefined) {
+            filtros = isPrimitiveKey(id)
+                ? ({ Id: id, ...filtros } as Partial<T>)
+                : ({ ...(id as object), ...filtros } as Partial<T>);
+        }
+        return await this.dbService.getAll(filtros);
     }
 
-    public async update(id: number, cambios: Partial<T>): Promise<boolean> {
-        return this.dbService.update(id, cambios);
+    public async update(id: K, cambios: Partial<T>): Promise<boolean> {
+        return await this.dbService.update(id, cambios);
     }
 
-    public async deleteMany(ids: number[]): Promise<number> {
-        return this.dbService.deleteMany(ids);
+    public async deleteMany(ids: K[]): Promise<number> {
+        return await this.dbService.deleteMany(ids);
     }
 }
