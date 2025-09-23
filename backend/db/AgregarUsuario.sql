@@ -12,7 +12,8 @@ CREATE PROCEDURE AgregarUsuario (
     IN ID_TIPOUSUARIO INT
 )
 
-  -- Cambiar esta parte. 
+  -- Creas un create procedure en el que sea agregue un usuario y que también cheque si dicho usuario, ya existe. 
+  
 BEGIN
     -- Verificar que exista la sede
     IF EXISTS (SELECT 1 FROM Sede WHERE Id = p_IdSede) THEN
