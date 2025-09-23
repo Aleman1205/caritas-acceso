@@ -38,14 +38,30 @@ CREATE TABLE `Servicio` (
 );
 
 CREATE TABLE `SedeServicio` (
-  `IdSede` INT,
-  `IdServicio` INT,
+  `Id` INT AUTO_INCREMENT PRIMARY KEY,
   `Descripcion` VARCHAR(100),
   `Capacidad` DECIMAL(4,0),
   `Precio` DECIMAL(6,2),
   `HoraInicio` TIME,
   `HoraFinal` TIME,
-  PRIMARY KEY (`IdSede`, `IdServicio`)
+  `Estatus` BIT,
+  `IdSede` INT,
+  `IdServicio` INT
+);
+
+CREATE TABLE `Ruta` (
+  `IdSedeServicio` INT,
+  `Orden` INT,
+  `IdParada` INT,
+  PRIMARY KEY (`IdSedeServicio`, `Orden`)
+);
+
+CREATE TABLE `Parada` (
+  `Id` INT AUTO_INCREMENT PRIMARY KEY,
+  `Nombre` VARCHAR(40),
+  `Descripcion` VARCHAR(100),
+  `Ubicacion` VARCHAR(400),
+  `Estatus` BIT
 );
 
 CREATE TABLE `Transaccion` (
@@ -99,3 +115,7 @@ ALTER TABLE `Compra` ADD FOREIGN KEY (`IdSede`) REFERENCES `SedeServicio` (`IdSe
 ALTER TABLE `Compra` ADD FOREIGN KEY (`IdServicio`) REFERENCES `SedeServicio` (`IdServicio`);
 
 ALTER TABLE `Beneficiario` ADD FOREIGN KEY (`IdTransaccion`) REFERENCES `Transaccion` (`Id`);
+
+ALTER TABLE `Ruta` ADD FOREIGN KEY (`IdSedeServicio`) REFERENCES `SedeServicio` (`Id`);
+
+ALTER TABLE `Ruta` ADD FOREIGN KEY (`IdParada`) REFERENCES `Parada` (`Id`);
