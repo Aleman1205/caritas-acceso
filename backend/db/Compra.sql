@@ -8,7 +8,7 @@ CREATE PROCEDURE CompraDeServicio (
     IN IdServicio INT
 )
 
--- Cambiar esto
+-- Creas un create procedure en el que se ejecute la compra del servicio. 
 BEGIN
     -- Verificar que exista la sede
     IF EXISTS (SELECT 1 FROM Sede WHERE Id = p_IdSede) THEN
