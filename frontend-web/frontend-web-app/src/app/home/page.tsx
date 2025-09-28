@@ -5,8 +5,6 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Sidebar } from "@/components/layout/sidebar"
-
 
 const items = [
     {
@@ -44,11 +42,6 @@ const items = [
 export default function HomePage() {
     return (
         <div className="flex">
-            {/* si esto se mantendra para todas las paginas la barra lateral mover todo esta madre para layout.tsx */}
-            <div className="hidden md:block">
-                <Sidebar/>
-            </div>
-
             <main className="flex-1 p-8">
                 <h1 className="text-3x1 font-bold mb-8 text-center">Home</h1>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

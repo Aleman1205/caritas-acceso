@@ -45,7 +45,7 @@ export function Sidebar() {
                     Configuracion
                 </Link>
                 <Link
-                href="/"
+                href="/login"
                 className="block px-3 py-2 rounded-md hover:bg-[#1e293b]"
                 >
                     Cerrar sesión
