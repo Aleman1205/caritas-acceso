@@ -1,5 +1,5 @@
 import "./globals.css"
-import { Navbar } from "@/components/layout/navbar"
+import { AppLayout } from "@/components/layout/app-layout"
 
 export const metadata = {
   title: "Caritas",
@@ -10,8 +10,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body className="bg-[#0f172a] text-white">
-        <Navbar />
-        <main>{children}</main>
+        <AppLayout>{children}</AppLayout>
       </body>
     </html>
   )
