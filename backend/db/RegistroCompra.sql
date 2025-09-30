@@ -8,6 +8,7 @@ CREATE PROCEDURE CompraDeServicio (
     IN IdServicio INT
 )
 
+  EDITAR
 -- Creas un create procedure en el que se ejecute la compra del servicio. 
 BEGIN
     -- Verificar que exista la sede
