@@ -52,6 +52,7 @@ CREATE TABLE `SedeServicio` (
 CREATE TABLE `Ruta` (
   `IdSedeServicio` INT,
   `Orden` INT,
+  `Hora` TIME,
   `IdParada` INT,
   PRIMARY KEY (`IdSedeServicio`, `Orden`)
 );

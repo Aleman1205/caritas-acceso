@@ -35,7 +35,7 @@ export default abstract class BaseDbService<T, K extends Key = number> {
 		return rows as RowDataPacket[] as T[];
 	}
 
-	public async update(id: K, cambios: Partial<T>): Promise<boolean> {
+	public async update(id: K | Partial<K>, cambios: Partial<T>): Promise<boolean> {
 		// Sanitiza cambios según allowedUpdateFields
 		const clean = Object.entries(cambios || {}).filter(
 		([campo, value]) =>
@@ -92,7 +92,7 @@ export default abstract class BaseDbService<T, K extends Key = number> {
 		return result.affectedRows;
 	}
 
-	protected buildWhereForKey(id: K): { where: string; params: any[] } {
+	protected buildWhereForKey(id: K | Partial<K>): { where: string; params: any[] } {
 		if (this.keyColumns.length === 1) {
 			const col = this.keyColumns[0]!;
 			const val = isPrimitiveKey(id) ? id : (id as Record<string, any>)[col];

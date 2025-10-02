@@ -15,7 +15,7 @@ export default abstract class BaseHttpHandler<T extends object, K extends Key = 
     constructor(protected controller: BaseController<T, K>, protected validadorRequest: Validator<T>
     ) {}
 
-    protected abstract parseKey(params: Request["params"]): K | null;
+    protected abstract parseKey(params: Request["params"]): K | Partial<K> | null;
     public abstract create(req: Request, res: Response, next: NextFunction): Promise<void>;
 
     public async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
