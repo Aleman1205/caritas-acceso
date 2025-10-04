@@ -5,5 +5,5 @@ export interface TipoUsuario {
 
 export const defaultTipoUsuario: TipoUsuario = {
     Id: 1,
-    Descripcion: null,
+    Descripcion: null
 };
