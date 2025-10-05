@@ -1,21 +1,24 @@
 DELIMITER $$
 -- Posible inicio de sesión por medio del uso de la tabla Usuario Sede.
 CREATE PROCEDURE Usuario_InicioSesion (
-    IN email VARCHAR(300),
-    IN telefono VARCHAR(25),
-    IN nombre VARCHAR(70),
-    IN apellido VARCHAR(50),
-    IN fotoURL VARBINARY,
-    IN FechaNacimiento DATE,
-    IN ID_TIPOUSUARIO INT
+    IN username VARCHAR(300),
+    IN id_password INT
 )
 
--- EDITARR
--- Creas un create procedure en el que se ejecute la compra del servicio. 
 BEGIN
-    -- Condicionales. 
-   
+    -- Declaramos una variable status (int) para validar ó no el login. 
+	DECLARE status int;
+    -- Verificamos que el username y el id_password (IdTipoUsuario) existan en la tabla Usuario. 
+    IF EXISTS (SELECT 1 FROM Usuario WHERE Email=username AND IdTipoUsuario=id_password) THEN 
+      -- Si se valida la solicitud, entonces se le asigna el valor 1 al estatuto. 
+        Set @status=1;
+		ELSE
+      -- Si no se valida la solicitud, entonces se le asigna el valor 0 al estatuto. 
+		  SET @status=0;
+	END IF;
+  SELECT @status;
 END$$
 
 DELIMITER ;
+
 
