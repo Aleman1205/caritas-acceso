@@ -12,7 +12,7 @@ export interface Body {
 	Apellido?: string;
 	FotoUrl?: string; 
 	FechaNacimiento?: string;
-	IdTipoUsuario?: int;
+	IdTipoUsuario?: number;
 	Ids?: string[]; // para soportar deleteUsuario
 }
 export interface Query extends ParsedQs {
