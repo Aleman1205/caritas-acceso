@@ -9,7 +9,7 @@ CREATE PROCEDURE AgregarUsuario (
     IN apellido VARCHAR(50),
     IN fotourl LONGBLOB,
     IN fechaNacimiento DATE,
-    IN idTipoUsuario INT,
+    IN idTipoUsuario INT
 )
 
   -- Creas un create procedure en el que sea agregue un usuario y que también cheque si dicho usuario, ya existe. 
