@@ -2,13 +2,17 @@ import express from "express";
 import sedeRoutes from "./routes/sede.js"
 import servicioRoutes from "./routes/servicio.js"
 import sedeServiciosRoutes from "./routes/sede-servicio.js"
+import paradaRoutes from "./routes/parada.js"
+import rutaRoutes from "./routes/ruta.js"
 
 const app = express();
 app.use(express.json());
 
 app.use("/api/sedes", sedeRoutes);
 app.use("/api/servicios", servicioRoutes);
-app.use("/api/sede-servicios", sedeServiciosRoutes)
+app.use("/api/sede-servicios", sedeServiciosRoutes);
+app.use("/api/paradas", paradaRoutes);
+app.use("/api/rutas", rutaRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Ruta no encontrada" });

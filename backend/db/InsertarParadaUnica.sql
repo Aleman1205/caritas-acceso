@@ -2,7 +2,7 @@ DELIMITER $$
 
 CREATE PROCEDURE InsertarParadaUnica (
     IN p_Nombre VARCHAR(40),
-    IN p_Descripcion VARCHAR(100)
+    IN p_Descripcion VARCHAR(100),
     IN p_Ubicacion VARCHAR(400),
     IN p_Estatus BIT
 )

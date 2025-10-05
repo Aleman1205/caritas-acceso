@@ -3,27 +3,30 @@ import type { ParsedQs } from "qs";
 import type { Request } from "express";
 
 export interface Params extends ParamsDictionary {
-    IdSede? : string;
-    IdServicio?: string;
+    Id?: string;
 }
 export interface Body {
-    IdSede?: number
-    IdServicio?: number
+    Id?: number;
     Descripcion?: string
     Capacidad?: number
     Precio?: number
     HoraInicio: string
     HoraFinal?: string
-    Ids?: [number, number]; // para soportar delete
+    Estatus?: boolean | 0 | 1
+    IdSede?: number
+    IdServicio?: number
+    Ids?: number[]; // para soportar delete
 }
 export interface Query extends ParsedQs {
-    IdSede?: string
-    IdServicio?: string
-    Descripcion?: string
-    Capacidad?: string
-    Precio?: string
-    HoraInicio: string
-    HoraFinal?: string
+    Id?: string;
+    Descripcion?: string;
+    Capacidad?: string;
+    Precio?: string;
+    HoraInicio?: string;
+    HoraFinal?: string;
+    Estatus?: string; // "true"/"false"
+    IdSede?: string;
+    IdServicio?: string;
 }
 
 export type SedeServicioRequest = Request<Params, {}, Body, Query>;

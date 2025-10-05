@@ -40,6 +40,14 @@ export default class RutaValidador extends BaseValidadorRequest<Ruta> {
     );
   }
 
+  public override isBodyIds(obj: Request["body"]): boolean {
+        return (
+            obj?.Ids !== undefined &&
+            Array.isArray(obj.Ids) &&
+            obj.Ids.every((id: unknown) => isPositiveInt(id))
+        );
+  }
+  
   public override isBodyKeys(obj: Request["body"]): boolean {
     return Array.isArray(obj?.Keys) &&
       obj.Keys.every((k: any) =>

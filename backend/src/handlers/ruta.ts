@@ -10,7 +10,7 @@ export default class RutaHttpHandler extends BaseHttpHandler<Ruta, { IdSedeServi
         super(controller, validadorRequest);
     }
 
-    protected override parseKey(params: Request["params"]): { IdSedeServicio: number } | null {
+    protected override parseKey(params: Request["params"]): { IdSedeServicio: number }  | null {
         return params?.IdSedeServicio !== undefined ? { IdSedeServicio: Number(params?.IdSedeServicio) } : null;
     }
 
