@@ -11,8 +11,8 @@ export interface Body {
         Orden: number,
         Hora: string,
         IdParada: number,
-    }[] // Insercion por objeto
-    Ids?: [number, number] // para soportar delete
+    }[] // Insercion por objeto (es una lista de objetos de tipo Ruta)
+    Ids?: [number, number] // una tupla para soportar delete
 }
 export interface Query extends ParsedQs {
     IdSedeServicio? : string
