@@ -66,7 +66,7 @@ CREATE TABLE `Parada` (
 );
 
 CREATE TABLE `Transaccion` (
-  `Id` VARCHAR(200) PRIMARY KEY,
+  `Id` VARCHAR(200) AUTO_INCREMENT PRIMARY KEY,
   `Fecha` datetime
 );
 
