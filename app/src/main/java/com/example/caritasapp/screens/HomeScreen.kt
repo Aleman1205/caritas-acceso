@@ -71,11 +71,11 @@ fun HomeScreen(navController: NavHostController) {
         shape = RoundedCornerShape(40.dp),
         modifier = Modifier
           .fillMaxWidth()
-          .height(100.dp) // ✅ Taller bottom button
+          .height(100.dp)
       ) {
         Text(
           text = "Consultar mis reservas",
-          fontSize = 22.sp, // ✅ Bigger text
+          fontSize = 22.sp,
           textAlign = TextAlign.Center,
           fontWeight = FontWeight.Bold
         )
@@ -95,15 +95,15 @@ fun ServiceButton(
   Button(
     onClick = onClick,
     colors = ButtonDefaults.buttonColors(containerColor = color),
-    shape = RoundedCornerShape(40.dp), // ✅ more rounded like cards
+    shape = RoundedCornerShape(40.dp),
     modifier = Modifier
       .fillMaxWidth()
-      .height(150.dp) // ✅ Big like mockup
+      .height(150.dp)
       .padding(vertical = 10.dp)
   ) {
     Text(
       text = text,
-      fontSize = 24.sp, // ✅ Large readable text
+      fontSize = 24.sp,
       fontWeight = FontWeight.Bold,
       textAlign = TextAlign.Center,
       lineHeight = 30.sp
