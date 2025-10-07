@@ -44,7 +44,7 @@ fun HomeScreen(navController: NavHostController) {
       ServiceButton(
         text = "Reservar alojamiento en albergue",
         color = CaritasBlueTeal,
-        onClick = { navController.navigate(Screen.Terms.route) }
+        onClick = { navController.navigate(Screen.Sedes.route) }
       )
       ServiceButton(
         text = "Consultar servicios por albergue",
