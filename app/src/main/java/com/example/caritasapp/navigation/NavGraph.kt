@@ -11,6 +11,10 @@ sealed class Screen(val route: String) {
   object Splash : Screen("splash")
   object Terms : Screen("terms")
   object Home : Screen("home")
+  object Sedes : Screen("Sedes")
+  object Reserve : Screen("reserve")
+  object ReservationForm : Screen("reservation_form")
+  object ReservationQR : Screen("reservation_qr")
 }
 
 @Composable
@@ -22,5 +26,9 @@ fun AppNavGraph(navController: NavHostController) {
     composable(Screen.Splash.route) { SplashScreen(navController) }
     composable(Screen.Terms.route) { TermsScreen(navController) }
     composable(Screen.Home.route) { HomeScreen(navController) }
+    composable(Screen.Sedes.route) { SedeScreen(navController) }
+    composable(Screen.Reserve.route) { ReserveScreen(navController) }
+    composable(Screen.ReservationForm.route) { ReservationFormScreen(navController) }
+    composable(Screen.ReservationQR.route) { ReservationQRScreen(navController) }
   }
 }
