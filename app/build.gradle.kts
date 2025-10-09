@@ -53,7 +53,7 @@ dependencies {
 
   // Add the ZXing core dependency here
   implementation("com.google.zxing:core:3.5.3")
-
+  implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.espresso.core)
