@@ -1,4 +1,4 @@
--- En proceso de adaptación a la funcionalidad para agregar usuarios de la plataforma. 
+-- En proceso de adaptación a la funcionalidad para agregar usuarios de la plataforma. Prueba pendeja. 
 
 DELIMITER $$
 
