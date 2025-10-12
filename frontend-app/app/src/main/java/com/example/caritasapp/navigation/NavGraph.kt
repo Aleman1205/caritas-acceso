@@ -10,11 +10,14 @@ import com.example.caritasapp.screens.*
 sealed class Screen(val route: String) {
   object Splash : Screen("splash")
   object Terms : Screen("terms")
+  object Start : Screen("start")
   object Home : Screen("home")
   object Sedes : Screen("Sedes")
   object Reserve : Screen("reserve")
   object ReservationForm : Screen("reservation_form")
   object ReservationQR : Screen("reservation_qr")
+  object Transporte : Screen("transporte")
+  object ConsultarServicios : Screen("consultar_servicios")
 }
 
 @Composable
@@ -25,10 +28,13 @@ fun AppNavGraph(navController: NavHostController) {
   ) {
     composable(Screen.Splash.route) { SplashScreen(navController) }
     composable(Screen.Terms.route) { TermsScreen(navController) }
+    composable(Screen.Start.route) { StartScreen(navController) }
     composable(Screen.Home.route) { HomeScreen(navController) }
     composable(Screen.Sedes.route) { SedeScreen(navController) }
     composable(Screen.Reserve.route) { ReserveScreen(navController) }
     composable(Screen.ReservationForm.route) { ReservationFormScreen(navController) }
     composable(Screen.ReservationQR.route) { ReservationQRScreen(navController) }
+    composable(Screen.Transporte.route) { TransporteScreen(navController) }
+    composable(Screen.ConsultarServicios.route) { ConsultarServiciosScreen(navController) }
   }
 }
