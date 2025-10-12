@@ -2,7 +2,12 @@ import mysql from "mysql2/promise";
 import type { Pool } from "mysql2/promise";
 import dotenv from "dotenv";
 
+
 dotenv.config();
+
+['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE'].forEach((key) => {
+  if (!process.env[key]) throw new Error(`Falta la variable de entorno ${key}`);
+});
 
 export const dbPool: Pool = await mysql.createPool({
     host: process.env.MYSQL_HOST!,

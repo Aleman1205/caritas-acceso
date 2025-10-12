@@ -13,15 +13,36 @@ export default class CompraHttpHandler extends BaseHttpHandler<Compra, string> {
     }
 
     protected override parseKey(params: Request["params"]): string | null {
-        return params?.IdTransaccion !== undefined ? String(params.IdTransaccion) : null;
+        return params?.Id ?? null;
     }
 
     public override async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             if (!this.validadorRequest.isBody(req.body)) throw new Error("Formato del body no válido.");
             const compra: Compra = withDefaults<Compra>(req.body, defaultCompra);
+            if (typeof compra.Fecha === "string") compra.Fecha = new Date(compra.Fecha);
             const exitoso = await this.controller.create(compra);
             res.json({ exitoso });
         } catch (error) { next(error); }
     }
+    public async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const id = this.parseKey(req.params);
+        if (!id) {
+            res.status(400).json({ message: "IdTransaccion no proporcionado" });
+            return;
+        }
+
+        const compra = await this.controller.getById(id); // <-- Necesita existir en el controller
+        if (!compra) {
+            res.status(404).json({ message: "Compra no encontrada" });
+            return;
+        }
+
+        res.json(compra);
+    } catch (error) {
+        next(error);
+    }
+    }
+
 }

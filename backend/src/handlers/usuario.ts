@@ -13,7 +13,7 @@ export default class UsuarioHttpHandler extends BaseHttpHandler<Usuario, string>
     }
 
     protected override parseKey(params: Request["params"]): string | null {
-        return params?.Email !== undefined ? String(params.Email) : null;
+        return params?.Email ?? null;
     }
 
     public override async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -24,5 +24,26 @@ export default class UsuarioHttpHandler extends BaseHttpHandler<Usuario, string>
             res.json({ exitoso });
         } catch (error) { next(error); }
     }
+
+    public async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const email = this.parseKey(req.params);
+        if (!email) {
+            res.status(400).json({ message: "Email no proporcionado" });
+            return;
+        }
+
+        const usuario = await this.controller.getById(email); // <-- Necesita existir en el controller
+        if (!usuario) {
+            res.status(404).json({ message: "Usuario no encontrado" });
+            return;
+        }
+
+        res.json(usuario);
+    } catch (error) {
+        next(error);
+        }
+    }
+
 }
 

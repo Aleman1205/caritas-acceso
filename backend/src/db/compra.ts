@@ -12,27 +12,29 @@ export default class CompraDbService extends BaseDbService<Compra, string> {
     super(db, "Compra", ALLOWED_FIELDS, ALLOWED_UPDATE_FIELDS, ["IdTransaccion"]);
   }
 
-  // Crea un registro de compra.
+ // Crear una nueva compra usando el stored procedure CompraDeServicio.
   public override async create(c: Compra): Promise<boolean> {
-    const sql = `
-      INSERT INTO ${this.tableName}
-      (IdTransaccion, Total, Fecha, IdSede, IdServicio)
-      VALUES (?, ?, ?, ?, ?)
-    `;
+    try {
+      const [result] = await this.db.query<ResultSetHeader>(
+        "CALL CompraDeServicio(?, ?, ?, ?, ?)",
+        [
+          c.IdTransaccion ?? null,
+          c.Total ?? null,
+          c.Fecha ?? null,
+          c.IdSede ?? null,
+          c.IdServicio ?? null,
+        ]
+      );
 
-    const [result] = await this.db.query<ResultSetHeader>(sql, [
-      c.IdTransaccion ?? null,
-      c.Total ?? null,
-      c.Fecha ?? null,        
-      c.IdSede ?? null,
-      c.IdServicio ?? null,
-    ]);
-
-    return result.affectedRows > 0;
+      return (result as any).affectedRows > 0;
+    } catch (err) {
+      console.error("Error al registrar compra:", err);
+      return false;
+    }
   }
 
   //Actualiza los datos de una compra.
-  public override async update(c: Compra): Promise<boolean> {
+  public override async update(id: string, cambios: Partial<Compra>): Promise<boolean> {
     const sql = `
       UPDATE ${this.tableName}
       SET Total = ?, Fecha = ?
@@ -40,9 +42,9 @@ export default class CompraDbService extends BaseDbService<Compra, string> {
     `;
 
     const [result] = await this.db.query<ResultSetHeader>(sql, [
-      c.Total ?? null,
-      c.Fecha ?? null,
-      c.IdTransaccion,
+      cambios.Total ?? null,
+      cambios.Fecha ?? null,
+      cambios.IdTransaccion,
     ]);
 
     return result.affectedRows > 0;

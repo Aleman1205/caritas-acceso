@@ -12,23 +12,25 @@ export default class UsuarioDbService extends BaseDbService<Usuario, string> {
 
   //Crear un nuevo usuario
   public override async create(u: Usuario): Promise<boolean> {
-    const sql = `
-      INSERT INTO ${this.tableName}
-      (Email, Telefono, Nombre, Apellido, FotoUrl, FechaNacimiento, IdTipoUsuario)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
+    try {
+      const [result] = await this.db.query<ResultSetHeader>(
+        "CALL AgregarUsuario(?, ?, ?, ?, ?, ?, ?)",
+        [
+          u.Email ?? null,
+          u.Telefono ?? null,
+          u.Nombre ?? null,
+          u.Apellido ?? null,
+          u.FotoUrl ?? null,
+          u.FechaNacimiento ?? null,
+          u.IdTipoUsuario ?? null,
+        ]
+      );
 
-    const [result] = await this.db.query<ResultSetHeader>(sql, [
-      u.Email ?? null,
-      u.Telefono ?? null,
-      u.Nombre ?? null,
-      u.Apellido ?? null,
-      u.FotoUrl ?? null,
-      u.FechaNacimiento ?? null,
-      u.IdTipoUsuario ?? null
-    ]);
-
-    return result.affectedRows > 0;
+      return (result as any).affectedRows > 0;
+    } catch (err) {
+      console.error("Error al crear usuario:", err);
+      return false;
+    }
   }
 
   //Inicio de sesión.
@@ -42,22 +44,20 @@ export default class UsuarioDbService extends BaseDbService<Usuario, string> {
   }
 
   //Actualización de los datos del usuario. 
-  public override async update(u: Usuario): Promise<boolean> {
-    const sql = `
-      UPDATE ${this.tableName}
-      SET Telefono = ?, Nombre = ?, Apellido = ?, FotoUrl = ?, FechaNacimiento = ?
-      WHERE Email = ?
-    `;
-
-    const [result] = await this.db.query<ResultSetHeader>(sql, [
-      u.Telefono ?? null,
-      u.Nombre ?? null,
-      u.Apellido ?? null,
-      u.FotoUrl ?? null,
-      u.FechaNacimiento ?? null,
-      u.Email
-    ]);
-
-    return result.affectedRows > 0;
+  public override async update(id: string, cambios: Partial<Usuario>): Promise<boolean> {
+  const sql = `
+    UPDATE ${this.tableName}
+    SET Telefono = ?, Nombre = ?, Apellido = ?, FotoUrl = ?, FechaNacimiento = ?
+    WHERE Email = ?
+  `;
+  const [result] = await this.db.query<ResultSetHeader>(sql, [
+    cambios.Telefono ?? null,
+    cambios.Nombre ?? null,
+    cambios.Apellido ?? null,
+    cambios.FotoUrl ?? null,
+    cambios.FechaNacimiento ?? null,
+    id
+  ]);
+  return result.affectedRows > 0;
   }
 }

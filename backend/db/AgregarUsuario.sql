@@ -16,19 +16,21 @@ CREATE PROCEDURE AgregarUsuario (
   
 BEGIN
     -- Verificar que no exista otro usuario con los mismos datos.
-    IF NOT EXISTS (SELECT 1 FROM Usuario WHERE Nombre = nombre AND Apellido=apellido AND IdTipoUsuario=idTipoUsuario) THEN
+    IF NOT EXISTS (SELECT 1 FROM Usuario WHERE Nombre = nombre AND Apellido=apellido AND IdTipoUsuario=idTipoUsuario AND Email=email) THEN
         -- Verificar que el id en la tabla tipo de usuario exista 
         IF EXISTS (SELECT 1 FROM TipoUsuario WHERE Id = idTipoUsuario) THEN
-            -- Verificar que no haya otro usuario con el mismo email en la tabla UsuarioSede.
-            IF NOT EXISTS (SELECT 1 FROM UsuarioSede WHERE Email=email) THEN
-                INSERT INTO USUARIO (
-                    Email, Telefono, Nombre, Apellido, FotoUrl, FechaNacimiento, IdTipoUsuario
-                )
-                VALUES (
-                    email, telefono, nombre, apellido, fotourl, fechaNacimiento, idTipoUsuario
-                );
-            END IF;
+            INSERT INTO USUARIO (
+                Email, Telefono, Nombre, Apellido, FotoUrl, FechaNacimiento, IdTipoUsuario
+            )
+            VALUES (
+                email, telefono, nombre, apellido, fotourl, fechaNacimiento, idTipoUsuario
+            );
+            SELECT 'Usuario creado correctamente' AS mensaje, 1 AS codigo;
+        ELSE
+            SELECT 'Tipo de usuario no existe' AS mensaje, 0 AS codigo;
         END IF;
+    ELSE
+        SELECT 'Email ya registrado' AS mensaje, 0 AS codigo;
     END IF;
 END$$
 
