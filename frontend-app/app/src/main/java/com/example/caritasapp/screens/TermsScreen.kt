@@ -64,7 +64,7 @@ fun TermsScreen(navController: NavHostController) {
 
       Button(
         onClick = {
-          navController.navigate(Screen.Home.route) {
+          navController.navigate(Screen.Start.route) {
             popUpTo(Screen.Terms.route) { inclusive = true }
           }
         },

@@ -1,5 +1,6 @@
 package com.example.caritasapp.screens
 
+import android.R.attr.onClick
 import android.R.attr.text
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,10 +41,15 @@ data class Sede(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavHostController) {
-  var selectedSede by remember { mutableStateOf("Seleccionar Sede") }
+  var selectedSede by rememberSaveable { mutableStateOf<String?>(null) }
+  var hasReservation by rememberSaveable { mutableStateOf(false) }
+
+  val sedeSelected = selectedSede != null
+  val transportEnabled = hasReservation
+
   var showSedeSheet by remember { mutableStateOf(false) }
 
-  // Mock sedes list (replace with backend data later
+  // Mock sedes list (replace with backend data later)
   val sedes = listOf(
     Sede(
       "Cáritas Monterrey - Centro",
@@ -101,6 +108,7 @@ fun HomeScreen(navController: NavHostController) {
                   .fillMaxWidth()
                   .clickable {
                     selectedSede = sede.name
+                    hasReservation = false
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
                       showSedeSheet = false
                     }
@@ -151,7 +159,7 @@ fun HomeScreen(navController: NavHostController) {
           .padding(vertical = 18.dp, horizontal = 16.dp)
       ) {
         Text(
-          text = selectedSede,
+          text = selectedSede ?: "Seleccionar Sede",
           fontSize = 22.sp,
           fontWeight = FontWeight.SemiBold,
           color = CaritasNavy
@@ -169,23 +177,33 @@ fun HomeScreen(navController: NavHostController) {
       )
 
       ServiceButton(
-        text = "Reservar alojamiento en albergue",
+        text = "Reservar alojamiento en sede",
         color = CaritasBlueTeal,
-        onClick = { navController.navigate(Screen.Reserve.route) }
+        enabled = sedeSelected && !hasReservation,
+        onClick = {
+          hasReservation = true
+          navController.navigate(Screen.Reserve.route)
+        }
       )
-      ServiceButton(
-        text = "Consultar servicios por albergue",
-        color = CaritasBlueTeal,
-        onClick = { navController.navigate(Screen.Terms.route) }
-      )
+
       ServiceButton(
         text = "Transporte",
         color = CaritasBlueTeal,
-        onClick = { navController.navigate(Screen.Terms.route) }
+        enabled = transportEnabled,
+        onClick = { navController.navigate(Screen.Transporte.route) }
       )
+
+      ServiceButton(
+        text = "Consultar servicios del sede",
+        color = CaritasBlueTeal,
+        enabled = sedeSelected,
+        onClick = { navController.navigate(Screen.ConsultarServicios.route) }
+      )
+
       ServiceButton(
         text = "Reseña y valoración",
         color = CaritasBlueTeal,
+        enabled = sedeSelected,
         onClick = { navController.navigate(Screen.Terms.route) }
       )
 
@@ -193,7 +211,10 @@ fun HomeScreen(navController: NavHostController) {
 
       Button(
         onClick = { navController.navigate(Screen.Terms.route) },
-        colors = ButtonDefaults.buttonColors(containerColor = CaritasNavy),
+        enabled = transportEnabled,
+        colors = ButtonDefaults.buttonColors(
+          containerColor = if (transportEnabled) CaritasNavy else CaritasNavy.copy(alpha = 0.4f)
+        ),
         shape = RoundedCornerShape(40.dp),
         modifier = Modifier
           .fillMaxWidth()
@@ -216,11 +237,15 @@ fun HomeScreen(navController: NavHostController) {
 fun ServiceButton(
   text: String,
   color: androidx.compose.ui.graphics.Color,
+  enabled: Boolean,
   onClick: () -> Unit
 ) {
   Button(
     onClick = onClick,
-    colors = ButtonDefaults.buttonColors(containerColor = color),
+    enabled = enabled,
+    colors = ButtonDefaults.buttonColors(
+      containerColor = if (enabled) color else color.copy(alpha = 0.4f)
+    ),
     shape = RoundedCornerShape(40.dp),
     modifier = Modifier
       .fillMaxWidth()
