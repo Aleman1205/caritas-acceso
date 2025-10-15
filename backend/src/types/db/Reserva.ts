@@ -2,7 +2,8 @@ export interface Reserva {
     IdTransaccion: string;
     FechaInicio: string;     // formato ISO 'YYYY-MM-DD HH:mm:ss'
     FechaSalida: string;     // formato ISO 'YYYY-MM-DD HH:mm:ss'
-    NumeroPersonas: number;
+    NumeroHombres: number;
+    NumeroMujeres: number;
     IdSede: number;
 }
 
@@ -10,6 +11,7 @@ export const defaultReserva: Reserva = {
     IdTransaccion: "",
     FechaInicio: "",
     FechaSalida: "",
-    NumeroPersonas: 0,
+    NumeroHombres: 0,
+    NumeroMujeres: 0,
     IdSede: 0
 };
