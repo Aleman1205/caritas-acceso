@@ -1,5 +1,5 @@
 import type UsuarioDbService from "../db/usuario.js";
-import type { Usuario } from "../types/db/usuario.js";
+import type Usuario from "../types/db/Usuario.js";
 import BaseController from "./base.js";
 
 export default class UsuarioController extends BaseController<Usuario, string > {

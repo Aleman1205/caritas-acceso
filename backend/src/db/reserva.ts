@@ -2,24 +2,26 @@ import type { Pool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import type { Reserva } from "../types/db/Reserva.js";
 import BaseDbService from "./base.js";
 
-const ALLOWED_FIELDS = ["IdTransaccion", "FechaInicio", "FechaSalida", "NumeroPersonas", "IdSede"] as const;
-const ALLOWED_UPDATE_FIELDS = ["FechaInicio", "FechaSalida", "NumeroPersonas", "IdSede"] as const;
+// Campos permitidos para selección y actualización
+const ALLOWED_FIELDS = ["IdTransaccion", "FechaInicio", "FechaSalida", "NumeroHombres", "NumeroMujeres", "IdSede"] as const;
+const ALLOWED_UPDATE_FIELDS = ["FechaInicio", "FechaSalida", "NumeroHombres", "NumeroMujeres", "IdSede"] as const;
 
 export default class ReservaDbService extends BaseDbService<Reserva, string> {
 	constructor(readonly db: Pool) {
 		super(db, "Reserva", ALLOWED_FIELDS, ALLOWED_UPDATE_FIELDS, ["IdTransaccion"]);
 	}
 
-	// Crea una reserva
+	// Crear una reserva
 	public override async create(reserva: Reserva): Promise<boolean> {
 		const [result] = await this.db.query<ResultSetHeader>(
-			`INSERT INTO Reserva (IdTransaccion, FechaInicio, FechaSalida, NumeroPersonas, IdSede)
-			 VALUES (?, ?, ?, ?, ?);`,
+			`INSERT INTO Reserva (IdTransaccion, FechaInicio, FechaSalida, NumeroHombres, NumeroMujeres, IdSede)
+			 VALUES (?, ?, ?, ?, ?, ?);`,
 			[
 				reserva.IdTransaccion,
 				reserva.FechaInicio,
 				reserva.FechaSalida,
-				reserva.NumeroPersonas,
+				reserva.NumeroHombres,
+				reserva.NumeroMujeres,
 				reserva.IdSede
 			]
 		);
