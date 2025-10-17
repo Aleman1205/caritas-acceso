@@ -20,4 +20,3 @@ router.get("/obtener/:IdTransaccion", handler.getById.bind(handler));
 router.put("/modificar/:IdTransaccion", handler.update.bind(handler));
 router.delete("/eliminar", handler.deleteMany.bind(handler));
 
-export default router;

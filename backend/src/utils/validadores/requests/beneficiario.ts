@@ -72,8 +72,4 @@ export default class BeneficiarioValidador extends BaseValidadorRequest<Benefici
 		if (obj?.Email !== undefined) filtros.Email = String(obj.Email);
 
 		// Ejemplo de uso con booleanos
-		// if (obj?.Activo !== undefined) filtros.Activo = toBoolStrict(obj.Activo);
-
-		return filtros;
-	}
-}
+		// if (obj?.Activo !== undefined) filtros.
