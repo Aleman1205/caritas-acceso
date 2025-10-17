@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import BaseHttpHandler from "./base.js";
-import { defaultServicio, type Servicio } from "../types/db/Servicio.js";
+import { defaultServicio, type Servicio } from "../types/db/servicio.js";
 import type ServicioController from "../controllers/servicio.js";
 import ServicioValidador from "../utils/validadores/requests/servicio.js";
 import withDefaults from "../utils/functions/withDefaultsFiller.js";

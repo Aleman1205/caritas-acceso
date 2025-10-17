@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import BaseHttpHandler from "./base.js";
-import type { Beneficiario } from "../types/db/Beneficiario.js";
-import { defaultBeneficiario } from "../types/db/Beneficiario.js";
+import type { Beneficiario } from "../types/db/beneficiario.js";
+import { defaultBeneficiario } from "../types/db/beneficiario.js";
 import type BeneficiarioController from "../controllers/beneficiario.js";
 import BeneficiarioValidadorRequest from "../utils/validadores/requests/beneficiario.js";
 import withDefaults from "../utils/functions/withDefaultsFiller.js";

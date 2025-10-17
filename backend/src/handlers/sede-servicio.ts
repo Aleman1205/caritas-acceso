@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import type SedeServicioController from "../controllers/sede-servicio.js";
 import withDefaults from "../utils/functions/withDefaultsFiller.js";
-import { defaultSedeServicio, type SedeServicio } from "../types/db/SedeServicio.js";
+import { defaultSedeServicio, type SedeServicio } from "../types/db/sede-servicio.js";
 import BaseHttpHandler from "./base.js";
 import type SedeServicioValidador from "../utils/validadores/requests/sede-servicio.js";
 

@@ -2,7 +2,7 @@ import type { Request } from "express";
 import { isPositiveInt, isPositiveIntStringValid, isValidString } from "../../functions/typeValidation.js";
 import { toBoolStrict } from "../../functions/toBoolStrict.js";
 import BaseValidadorRequest from "./base.js";
-import type { Servicio } from "../../../types/db/Servicio.js";
+import type { Servicio } from "../../../types/db/servicio.js";
 import type { ServicioRequest } from "../../../types/requests/servicio.js";
 
 export default class ServicioValidador extends BaseValidadorRequest<Servicio> {

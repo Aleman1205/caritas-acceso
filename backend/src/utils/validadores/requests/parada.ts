@@ -2,7 +2,7 @@ import type { Request } from "express";
 import { isPositiveInt, isPositiveIntStringValid, isValidString } from "../../functions/typeValidation.js";
 import { toBoolStrict } from "../../functions/toBoolStrict.js";
 import BaseValidadorRequest from "./base.js";
-import type { Parada } from "../../../types/db/Parada.js";
+import type { Parada } from "../../../types/db/parada.js";
 import type { ParadaRequest } from "../../../types/requests/parada.js";
 
 export default class ParadaValidador extends BaseValidadorRequest<Parada> {

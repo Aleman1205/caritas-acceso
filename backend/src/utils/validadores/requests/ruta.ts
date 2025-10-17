@@ -1,7 +1,7 @@
 import type { Request } from "express";
 import { isPositiveInt, isPositiveIntStringValid, isValidTime } from "../../functions/typeValidation.js";
 import BaseValidadorRequest from "./base.js";
-import type { Ruta } from "../../../types/db/Ruta.js";
+import type { Ruta } from "../../../types/db/ruta.js";
 import type { RutaRequest } from "../../../types/requests/ruta.js";
 
 function isRuta(obj: any): obj is Omit<Ruta,"IdSedeServicio"> {
