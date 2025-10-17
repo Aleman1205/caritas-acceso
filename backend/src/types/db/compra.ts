@@ -6,4 +6,10 @@ export default interface Compra {
   IdServicio: number;
 }
 
-exp
+export const defaultCompra: Compra = {
+  IdTransaccion: "",
+  Total: 0,
+  Fecha: new Date(),
+  IdSede: 0,
+  IdServicio: 0,
+};
