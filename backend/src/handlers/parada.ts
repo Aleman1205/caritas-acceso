@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import BaseHttpHandler from "./base.js";
-import type { Parada } from "../types/db/Parada.js";
-import { defaultParada } from "../types/db/Parada.js";
+import type { Parada } from "../types/db/parada.js";
+import { defaultParada } from "../types/db/parada.js";
 import type ParadaController from "../controllers/parada.js";
 import ParadaValidador from "../utils/validadores/requests/parada.js";
 import withDefaults from "../utils/functions/withDefaultsFiller.js";

@@ -1,5 +1,5 @@
 import type RutaDbService from "../db/ruta.js";
-import type { Ruta } from "../types/db/Ruta.js";
+import type { Ruta } from "../types/db/ruta.js";
 import { isPrimitiveKey } from "../types/key.js";
 import BaseController from "./base.js";
 

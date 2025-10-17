@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import BaseHttpHandler from "./base.js";
-import type { Compra } from "../types/db/Compra.js";
-import { defaultCompra } from "../types/db/Compra.js";
+import type Compra from "../types/db/compra.js";
+import { defaultCompra } from "../types/db/compra.js";
 import type CompraController from "../controllers/compra.js";
 import CompraValidador from "../utils/validadores/requests/compra.js";
 import withDefaults from "../utils/functions/withDefaultsFiller.js";

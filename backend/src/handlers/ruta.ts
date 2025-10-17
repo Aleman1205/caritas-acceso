@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import BaseHttpHandler from "./base.js";
-import type { Ruta } from "../types/db/Ruta.js";
+import type { Ruta } from "../types/db/ruta.js";
 import type RutaController from "../controllers/ruta.js";
 import RutaValidador from "../utils/validadores/requests/ruta.js";
 

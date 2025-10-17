@@ -1,4 +1,4 @@
-import type { Reserva } from "../types/db/Reserva.js";
+import type { Reserva } from "../types/db/reserva.js";
 import BaseController from "./base.js";
 import ReservaDbService from "../db/reserva.js";
 

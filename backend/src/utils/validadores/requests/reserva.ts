@@ -6,7 +6,7 @@ import {
 } from "../../functions/typeValidation.js";
 import { toBoolStrict } from "../../functions/toBoolStrict.js";
 import BaseValidadorRequest from "./base.js";
-import type { Reserva } from "../../../types/db/Reserva.js";
+import type { Reserva } from "../../../types/db/reserva.js";
 
 export default class ReservaValidador extends BaseValidadorRequest<Reserva> {
 	// Valida el cuerpo de la petición (POST / PUT)

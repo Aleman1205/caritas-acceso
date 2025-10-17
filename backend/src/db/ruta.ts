@@ -1,6 +1,6 @@
 import type { ResultSetHeader, RowDataPacket, Pool } from "mysql2/promise";
 import BaseDbService from "./base.js";
-import type { Ruta } from "../types/db/Ruta.js";
+import type { Ruta } from "../types/db/ruta.js";
 
 const ALLOWED_FIELDS = ["IdSedeServicio", "Orden", "Hora", "IdParada"] as const;
 const ALLOWED_UPDATE_FIELDS = ["IdParada", "Hora"] as const;

@@ -1,4 +1,4 @@
-import type { Beneficiario } from "../types/db/Beneficiario.js";
+import type { Beneficiario } from "../types/db/beneficiario.js";
 import BaseController from "./base.js";
 import BeneficiarioDbService from "../db/beneficiario.js";
 

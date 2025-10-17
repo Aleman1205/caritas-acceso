@@ -6,9 +6,10 @@ import {
 } from "../../functions/typeValidation.js";
 import { toBoolStrict } from "../../functions/toBoolStrict.js";
 import BaseValidadorRequest from "./base.js";
-import type { Beneficiario } from "../../../types/db/Beneficiario.js";
+import type { Beneficiario } from "../../../types/db/beneficiario.js";
 // (opcional) si tienes un tipo BeneficiarioRequest para querys
-// import type { BeneficiarioRequest } from "../../../types/requests/beneficiario.js";
+import BeneficiarioValidador from "../utils/validadores/requests/beneficiario.js";
+
 
 export default class BeneficiarioValidador extends BaseValidadorRequest<Beneficiario> {
 	//Valida el cuerpo de una petición (POST / PUT)

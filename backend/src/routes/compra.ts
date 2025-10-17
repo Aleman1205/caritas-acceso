@@ -7,17 +7,17 @@ import CompraValidadorRequest from "../utils/validadores/requests/compra.js";
 
 const router = Router();
 
-// wiring de dependencias
+// Wiring de dependencias
 const service = new CompraDbService(dbPool);
 const controller = new CompraController(service);
 const validadorRequest = new CompraValidadorRequest();
 const handler = new CompraHttpHandler(controller, validadorRequest);
 
-// rutas
+// Rutas
 router.post("/crear", handler.create.bind(handler));
 router.get("/obtener", handler.getAll.bind(handler));
-router.get("/obtener/:Id", handler.getAll.bind(handler));
-router.put("/modificar/:Id", handler.update.bind(handler));
+router.get("/obtener/:IdTransaccion", handler.getById.bind(handler));
+router.put("/modificar/:IdTransaccion", handler.update.bind(handler));
 router.delete("/eliminar", handler.deleteMany.bind(handler));
 
 export default router;

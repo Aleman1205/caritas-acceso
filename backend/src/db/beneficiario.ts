@@ -1,5 +1,5 @@
 import type { Pool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import type { Beneficiario } from "../types/db/Beneficiario.js";
+import type { Beneficiario } from "../types/db/beneficiario.js";
 import BaseDbService from "./base.js";
 
 const ALLOWED_FIELDS = ["Telefono", "IdTransaccion", "Nombre", "Apellido", "Email"] as const;

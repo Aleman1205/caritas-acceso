@@ -1,5 +1,5 @@
 import type BaseDbService from "../db/base.js";
-import type { Sede } from "../types/db/Sede.js";
+import type { Sede } from "../types/db/sede.js";
 import BaseController from "./base.js";
 
 export default class SedeController extends BaseController<Sede, number> {

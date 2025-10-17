@@ -3,8 +3,9 @@ import type { ParsedQs } from "qs";
 import type { Request } from "express";
 
 export interface Params extends ParamsDictionary {
-    Id? : string;
+    Id?: string;
 }
+
 export interface Body {
     IdTransaccion?: string;
     Total?: number;
@@ -13,12 +14,13 @@ export interface Body {
     IdServicio?: number;
     Ids?: string[]; // para soportar delete
 }
+
 export interface Query extends ParsedQs {
     IdTransaccion?: string;
-    Total?: number;
+    Total?: string;      // corregido: string, no number
     Fecha?: string;
-    IdSede?: number;
-    IdServicio?: number;
+    IdSede?: string;     // también string
+    IdServicio?: string; // también string
 }
 
-export type ParadaRequest = Request<Params, {}, Body, Query>;
+export type CompraRequest = Request<Params, {}, Body, Query>;

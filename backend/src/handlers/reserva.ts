@@ -1,15 +1,14 @@
 import type { Request, Response, NextFunction } from "express";
 import BaseHttpHandler from "./base.js";
-import type { Reserva } from "../types/db/Reserva.js";
-import { defaultReserva } from "../types/db/Reserva.js";
+import type { Reserva } from "../types/db/reserva.js";
 import type ReservaController from "../controllers/reserva.js";
-import ReservaValidadorRequest from "../utils/validadores/requests/reserva.js";
+import ReservaValidador from "../utils/validadores/requests/reserva.js";
 import withDefaults from "../utils/functions/withDefaultsFiller.js";
 
 export default class ReservaHttpHandler extends BaseHttpHandler<Reserva, string> {
 	constructor(
 		readonly controller: ReservaController,
-		readonly validadorRequest: ReservaValidadorRequest
+		readonly validadorRequest: ReservaValidador
 	) {
 		super(controller, validadorRequest);
 	}
@@ -25,7 +24,8 @@ export default class ReservaHttpHandler extends BaseHttpHandler<Reserva, string>
 			if (!this.validadorRequest.isBody(req.body))
 				throw new Error("Formato del body no válido.");
 
-			const reserva: Reserva = withDefaults<Reserva>(req.body, defaultReserva);
+			// ✅ Si no existe defaultReserva, simplemente pasa el body directamente
+			const reserva: Reserva = withDefaults<Reserva>(req.body, {} as Reserva);
 
 			const exitoso = await this.controller.create(reserva);
 			res.json({ exitoso });

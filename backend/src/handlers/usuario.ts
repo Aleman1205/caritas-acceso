@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import BaseHttpHandler from "./base.js";
-import type Usuario from "../types/db/Usuario.js";
+import type Usuario from "../types/db/usuario.js";
 import type UsuarioController from "../controllers/usuario.js";
 import UsuarioValidador from "../utils/validadores/requests/usuario.js";
 import withDefaults from "../utils/functions/withDefaultsFiller.js";

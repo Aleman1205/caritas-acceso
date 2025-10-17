@@ -5,7 +5,7 @@ import {
 	isValidString,
 } from "../../functions/typeValidation.js";
 import BaseValidadorRequest from "./base.js";
-import type Usuario from "../../../types/db/Usuario.js";
+import type Usuario from "../../../types/db/usuario.js";
 
 export default class UsuarioValidador extends BaseValidadorRequest<Usuario> {
 	// Valida el cuerpo (para POST o PUT)

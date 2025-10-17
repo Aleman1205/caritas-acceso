@@ -1,5 +1,5 @@
 import type { Pool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import type { Reserva } from "../types/db/Reserva.js";
+import type { Reserva } from "../types/db/reserva.js";
 import BaseDbService from "./base.js";
 
 // Campos permitidos para selección y actualización
