@@ -62,4 +62,17 @@ export default class CompraValidador extends BaseValidadorRequest<Compra> {
 			)
 		);
 	}
+
+	//  Nuevo método requerido por BaseValidadorRequest
+	public override getFiltrosQuery(obj: Request["query"]): Partial<Compra> {
+		const filtros: Partial<Compra> = {};
+
+		if (obj?.IdTransaccion !== undefined)
+			filtros.IdTransaccion = String(obj.IdTransaccion);
+		if (obj?.IdSede !== undefined) filtros.IdSede = Number(obj.IdSede);
+		if (obj?.IdServicio !== undefined)
+			filtros.IdServicio = Number(obj.IdServicio);
+
+		return filtros;
+	}
 }
