@@ -1,6 +1,6 @@
 import express from "express";
 import { crearReserva } from "../controllers/reservasController.js";
-import { pool } from "../db/pool.js";
+import { pool } from "../../compartido/db/pool.js";
 
 export const router = express.Router();
 

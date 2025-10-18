@@ -1,18 +1,20 @@
 import express from "express";
 import cors from "cors";
-import { router as reservasRouter } from "./routes/reservas.js";
-import { router as serviciosRouter } from "./routes/servicios.js";
-import { router as sedesRouter } from "./routes/sedes.js";
+import dotenv from "dotenv";
 
+import { router as movilRouter } from "./movil/index.js";
+import { router as webRouter } from "./web/index.js";
+
+dotenv.config();
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.json());
 
-app.use("/reservas", reservasRouter);
-app.use("/servicios", serviciosRouter);
-app.use("/sedes", sedesRouter);
+app.use("/movil", movilRouter);
+app.use("/web", webRouter);
 
-app.get("/", (req, res) => res.send("Caritas Servicio API is running"));
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

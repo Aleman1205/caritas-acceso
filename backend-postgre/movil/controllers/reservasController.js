@@ -1,4 +1,4 @@
-import { pool } from "../db/pool.js";
+import { pool } from "../../compartido/db/pool.js";
 import crypto from "crypto";
 
 export async function crearReserva(req, res) {
