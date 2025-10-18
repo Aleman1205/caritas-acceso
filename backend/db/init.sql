@@ -74,8 +74,10 @@ CREATE TABLE `Reserva` (
   `IdTransaccion` VARCHAR(200) PRIMARY KEY,
   `FechaInicio` DATETIME,
   `FechaSalida` DATETIME,
-  `NumeroPersonas` TINYINT,
-  `IdSede` INT
+  `NumeroHombres` INT DEFAULT 0,
+  `NumeroMujeres` INT DEFAULT 0,
+  `IdSede` INT,
+  FOREIGN KEY (`IdSede`) REFERENCES `Sede` (`Id`)
 );
 
 CREATE TABLE `Compra` (

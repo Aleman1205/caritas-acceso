@@ -1,3 +1,4 @@
+
 import express from "express";
 import { dbPool } from "./config/db/mysql.js";
 
@@ -8,10 +9,9 @@ import sedeServiciosRoutes from "./routes/sede-servicio.js";
 import paradaRoutes from "./routes/parada.js";
 import rutaRoutes from "./routes/ruta.js";
 import usuarioRoutes from "./routes/usuario.js";
-import compraRoutes from "./routes/compra.js";
 import beneficiarioRoutes from "./routes/beneficiario.js";
 import reservaRoutes from "./routes/reserva.js";
-
+import compraRoutes from "./routes/compra.js";
 const app = express();
 
 app.use(express.json());
@@ -23,9 +23,9 @@ app.use("/api/sede-servicios", sedeServiciosRoutes);
 app.use("/api/paradas", paradaRoutes);
 app.use("/api/rutas", rutaRoutes);
 app.use("/api/usuarios", usuarioRoutes);
-app.use("/api/compras", compraRoutes);
 app.use("/api/beneficiarios", beneficiarioRoutes);
 app.use("/api/reservas", reservaRoutes);
+​​app.use("/api/compras", compraRoutes);
 
 // Ruta por defecto (404)
 app.use((req, res) => {

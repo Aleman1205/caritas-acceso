@@ -14,7 +14,7 @@ export default class ReservaHttpHandler extends BaseHttpHandler<Reserva, string>
 		super(controller, validadorRequest);
 	}
 
-	// Define cómo identificar una reserva (por IdTransaccion)
+	// Determina la clave principal del registro (IdTransaccion)
 	protected override parseKey(params: Request["params"]): string | null {
 		return params?.IdTransaccion !== undefined ? String(params.IdTransaccion) : null;
 	}
@@ -24,8 +24,9 @@ export default class ReservaHttpHandler extends BaseHttpHandler<Reserva, string>
 		try {
 			if (!this.validadorRequest.isBody(req.body))
 				throw new Error("Formato del body no válido.");
-			
+
 			const reserva: Reserva = withDefaults<Reserva>(req.body, defaultReserva);
+
 			const exitoso = await this.controller.create(reserva);
 			res.json({ exitoso });
 		} catch (error) {
@@ -33,7 +34,7 @@ export default class ReservaHttpHandler extends BaseHttpHandler<Reserva, string>
 		}
 	}
 
-	// Obtiene una reserva por IdTransaccion
+	// Obtiene una reserva por su IdTransaccion
 	public async getOne(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
 			const { IdTransaccion } = req.params;
@@ -52,14 +53,14 @@ export default class ReservaHttpHandler extends BaseHttpHandler<Reserva, string>
 		}
 	}
 
-	// Elimina una reserva por IdTransaccion
+	// Elimina una reserva por IdTransaccion + IdSede
 	public async deleteOne(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
-			const { IdTransaccion } = req.params;
-			if (!IdTransaccion)
-				throw new Error("Falta el parámetro IdTransaccion.");
+			const { IdTransaccion, IdSede } = req.params;
+			if (!IdTransaccion || !IdSede)
+				throw new Error("Faltan parámetros: IdTransaccion o IdSede.");
 
-			const eliminado = await this.controller.eliminar(IdTransaccion);
+			const eliminado = await this.controller.eliminar(IdTransaccion, Number(IdSede));
 			res.json({ eliminado });
 		} catch (error) {
 			next(error);

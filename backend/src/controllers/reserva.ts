@@ -12,7 +12,7 @@ export default class ReservaController extends BaseController<Reserva, string> {
 		return await this.reservaDbService.create(reserva);
 	}
 
-	//Obtener una reserva por IdTransaccion
+	// Obtener por IdTransaccion
 	public async obtenerPorTransaccion(idTransaccion: string): Promise<Reserva | null> {
 		const resultados = await this.reservaDbService.getMany({
 			IdTransaccion: idTransaccion,
@@ -20,10 +20,11 @@ export default class ReservaController extends BaseController<Reserva, string> {
 		return resultados[0] ?? null;
 	}
 
-	//Eliminar una reserva por IdTransaccion
-	public async eliminar(idTransaccion: string): Promise<boolean> {
+	// Eliminar por IdTransaccion + IdSede
+	public async eliminar(idTransaccion: string, idSede: number): Promise<boolean> {
 		return await this.reservaDbService.delete({
 			IdTransaccion: idTransaccion,
+			IdSede: idSede,
 		});
 	}
 }

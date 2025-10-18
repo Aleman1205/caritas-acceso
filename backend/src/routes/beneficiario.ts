@@ -7,19 +7,25 @@ import BeneficiarioValidadorRequest from "../utils/validadores/requests/benefici
 
 const router = Router();
 
-// wiring de dependencias
+// Wiring de dependencias
 const service = new BeneficiarioDbService(dbPool);
 const controller = new BeneficiarioController(service);
 const validadorRequest = new BeneficiarioValidadorRequest();
 const handler = new BeneficiarioHttpHandler(controller, validadorRequest);
 
-// rutas
+// Rutas
 router.post("/crear", handler.create.bind(handler));
+
+// Obtener todos los beneficiarios
 router.get("/obtener", handler.getAll.bind(handler));
-router.get("/obtener/:IdTransaccion", handler.getOne.bind(handler));
-router.put("/modificar/:Telefono", handler.update.bind(handler));
+
+// Obtener un beneficiario específico (por Teléfono + IdTransaccion)
+router.get("/obtener/:Telefono/:IdTransaccion", handler.getOne.bind(handler));
+
+// Modificar (también con ambas claves, si lo implementas después)
+router.put("/modificar/:Telefono/:IdTransaccion", handler.update.bind(handler));
+
+// Eliminar
 router.delete("/eliminar/:Telefono/:IdTransaccion", handler.deleteOne.bind(handler));
-
-
 
 export default router;

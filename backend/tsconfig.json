@@ -1,49 +1,31 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    // File Layout
     "rootDir": "./src",
     "outDir": "./dist",
 
-    // Environment Settings
     "module": "nodenext",
-    "moduleResolution": "nodenext",
     "target": "esnext",
+    "moduleResolution": "nodenext",
     "types": ["node", "jest"],
     "esModuleInterop": true,
+    "noEmit": false,
+    "skipLibCheck": true,
 
-
-    // Mantiene los imports en formato ESM (.js en salida)
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "isolatedModules": true,
-
-    // Other Outputs
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
 
-    // Stricter Typechecking Options
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
 
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
-    // Performance
-    "skipLibCheck": true
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force"
   },
-
-  // Incluye solo el código fuente
   "include": ["src/**/*"],
-
-  // Excluye carpetas y archivos de build/test
   "exclude": [
     "node_modules",
     "dist",

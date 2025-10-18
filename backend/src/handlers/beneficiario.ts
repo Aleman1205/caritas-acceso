@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import BaseHttpHandler from "./base.js";
-import type {Beneficiario} from "../types/db/Beneficiario.js";
+import type { Beneficiario } from "../types/db/Beneficiario.js";
 import { defaultBeneficiario } from "../types/db/Beneficiario.js";
 import type BeneficiarioController from "../controllers/beneficiario.js";
 import BeneficiarioValidadorRequest from "../utils/validadores/requests/beneficiario.js";
@@ -16,16 +16,18 @@ export default class BeneficiarioHttpHandler extends BaseHttpHandler<Beneficiari
 
 	// Determina la clave principal del registro
 	protected override parseKey(params: Request["params"]): string | null {
-		// El identificador principal en Beneficiario es el teléfono o la combinación Telefono + IdTransaccion.
-		return params?.Telefono !== undefined ? String(params.Telefono) : null;
+		// El identificador principal en Beneficiario es la combinación Teléfono + IdTransaccion.
+		return params?.Telefono !== undefined && params?.IdTransaccion !== undefined
+			? `${params.Telefono}-${params.IdTransaccion}`
+			: null;
 	}
 
-	// rea un nuevo beneficiario
+	// Crear un nuevo beneficiario
 	public override async create(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
 			if (!this.validadorRequest.isBody(req.body))
 				throw new Error("Formato del body no válido.");
-			
+
 			const beneficiario: Beneficiario = withDefaults<Beneficiario>(
 				req.body,
 				defaultBeneficiario
@@ -38,25 +40,31 @@ export default class BeneficiarioHttpHandler extends BaseHttpHandler<Beneficiari
 		}
 	}
 
-	// Obtiene un beneficiario por su IdTransaccion
+	// Obtener un beneficiario por Telefono + IdTransaccion
 	public async getOne(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
-			const { IdTransaccion } = req.params;
-			if (typeof IdTransaccion !== "string") throw new Error("Parámetro IdTransaccion inválido.");
+			const { Telefono, IdTransaccion } = req.params;
+
+			if (!Telefono || !IdTransaccion)
+				throw new Error("Faltan parámetros: Telefono o IdTransaccion.");
 
 			const result = await this.controller.obtenerPorTransaccion(IdTransaccion);
-			if (!result) {
+
+			// Filtrar el resultado específico del teléfono
+			const beneficiario = result && result.Telefono === Telefono ? result : null;
+
+			if (!beneficiario) {
 				res.status(404).json({ mensaje: "Beneficiario no encontrado." });
 				return;
 			}
 
-			res.json(result);
+			res.json(beneficiario);
 		} catch (error) {
 			next(error);
 		}
 	}
 
-	// Elimina un beneficiario por Telefono + IdTransaccion
+	// Eliminar un beneficiario por Telefono + IdTransaccion
 	public async deleteOne(req: Request, res: Response, next: NextFunction): Promise<void> {
 		try {
 			const { Telefono, IdTransaccion } = req.params;
