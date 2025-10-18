@@ -11,12 +11,14 @@ import {
 } from "lucide-react"
 
 const navItems = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "", label: "Caritas", icon: LayoutDashboard },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/reservas", label: "Reservas", icon: CalendarDays },
     { href: "/cupos", label: "Cupos y Horarios", icon: CalendarClock },
-    { href: "/transporte", label: "Transporte", icon: Bus },
+    { href: "/transporte/solicitudes", label: "Transporte", icon: Bus },
     { href: "/notificaciones", label: "Notificaciones", icon: Bell },
     { href: "/sedes", label: "Sedes y Servicios", icon: Hotel },
+    { href: "/servicios", label: "Servicios", icon: Hotel }
 ]
 
 export function Sidebar() {
