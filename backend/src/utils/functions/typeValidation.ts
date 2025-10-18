@@ -31,4 +31,3 @@ export function isValidTime(value: unknown): value is string {
 
     return regex.test(value);
 }
-

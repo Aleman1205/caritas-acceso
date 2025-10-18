@@ -14,7 +14,7 @@ services:
       - DB_PASSWORD=${MYSQL_PASSWORD}
       - DB_NAME=${MYSQL_DATABASE}
     depends_on:
-      - db                      `  # arranca después de MySQL
+      - db # arranca después de MySQL
     command: npm run dev # override del CMD con el nodemon
 
   db:

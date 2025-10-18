@@ -1,7 +1,7 @@
 INSERT INTO Servicio (Nombre, Descripcion, Estatus)
 VALUES
 ('Gimnasio', 'Acceso a las instalaciones de gimnasio', b'1'),
-('Natación', 'Clases y acceso a la alberca', b'1'),
+('Natacion', 'Clases y acceso a la alberca', b'1'),
 ('Yoga', 'Sesiones de yoga en grupo', b'1'),
 ('Spinning', 'Clases de ciclismo bajo techo', b'0');
 

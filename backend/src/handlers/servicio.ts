@@ -19,8 +19,8 @@ export default class ServicioHttpHandler extends BaseHttpHandler<Servicio, numbe
             if (!this.validadorRequest.isBody(req.body)) {
                 throw new Error("Formato del body no válido.");
             }
-            const sede: Servicio = withDefaults<Servicio>(req.body, defaultServicio);
-            const exitoso = await this.controller.create(sede);
+            const servicio: Servicio = withDefaults<Servicio>(req.body, defaultServicio);
+            const exitoso = await this.controller.create(servicio);
             res.json({ exitoso });
         } catch (error) {
             next(error);

@@ -16,8 +16,8 @@ const handler = new SedeServicioHttpHandler(controller, validadorRequest);
 // rutas
 router.post("/crear", handler.create.bind(handler));
 router.get("/obtener", handler.getAll.bind(handler));
-router.get("/obtener/:IdSede/:IdServicio", handler.getAll.bind(handler));
-router.put("/modificar/:IdSede/:IdServicio", handler.update.bind(handler));
+router.get("/obtener/:Id", handler.getAll.bind(handler));
+router.put("/modificar/:Id", handler.update.bind(handler));
 router.delete("/eliminar", handler.deleteMany.bind(handler));
 
 export default router;

@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS Reserva (
+  IdTransaccion VARCHAR(200) NOT NULL,
+  FechaInicio DATETIME NULL,
+  FechaSalida DATETIME NULL,
+  NumeroHombres INT DEFAULT 0,
+  NumeroMujeres INT DEFAULT 0,
+  IdSede INT,
+  PRIMARY KEY (IdTransaccion),
+  FOREIGN KEY (IdSede) REFERENCES Sede(IdSede)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+);

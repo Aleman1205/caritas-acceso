@@ -1,0 +1,57 @@
+import type { Pool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import type Usuario from "../types/db/Usuario.js";
+import BaseDbService from "./base.js";
+
+const ALLOWED_FIELDS = [
+  "Email",
+  "Telefono",
+  "Nombre",
+  "Apellido",
+  "FotoUrl",
+  "FechaNacimiento",
+  "IdTipoUsuario"
+] as const;
+
+const ALLOWED_UPDATE_FIELDS = [
+  "Telefono",
+  "Nombre",
+  "Apellido",
+  "FotoUrl",
+  "FechaNacimiento"
+] as const;
+
+export default class UsuarioDbService extends BaseDbService<Usuario, string> {
+  constructor(readonly db: Pool) {
+    super(db, "Usuario", ALLOWED_FIELDS, ALLOWED_UPDATE_FIELDS, ["Email"]);
+  }
+
+  // Crear un nuevo usuario
+  public override async create(u: Usuario): Promise<boolean> {
+    const sql = `
+      INSERT INTO ${this.tableName}
+      (Email, Telefono, Nombre, Apellido, FotoUrl, FechaNacimiento, IdTipoUsuario)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const [result] = await this.db.query<ResultSetHeader>(sql, [
+      u.Email ?? null,
+      u.Telefono ?? null,
+      u.Nombre ?? null,
+      u.Apellido ?? null,
+      u.FotoUrl ?? null,
+      u.FechaNacimiento ?? null,
+      u.IdTipoUsuario ?? null
+    ]);
+
+    return result.affectedRows > 0;
+  }
+
+  // Inicio de sesión (login)
+  public async login(email: string, idTipoUsuario: number): Promise<Usuario | null> {
+    const sql = `SELECT * FROM ${this.tableName} WHERE Email = ? AND IdTipoUsuario = ?`;
+    const [rows] = await this.db.query<RowDataPacket[]>(sql, [email, idTipoUsuario]);
+    const usuario = rows[0] as Usuario | undefined;
+
+    return usuario ?? null;
+  }
+}

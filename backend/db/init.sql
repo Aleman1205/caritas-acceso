@@ -52,6 +52,7 @@ CREATE TABLE `SedeServicio` (
 CREATE TABLE `Ruta` (
   `IdSedeServicio` INT,
   `Orden` INT,
+  `Hora` TIME,
   `IdParada` INT,
   PRIMARY KEY (`IdSedeServicio`, `Orden`)
 );
@@ -65,7 +66,7 @@ CREATE TABLE `Parada` (
 );
 
 CREATE TABLE `Transaccion` (
-  `Id` VARCHAR(200) PRIMARY KEY,
+  `Id` VARCHAR(200) AUTO_INCREMENT PRIMARY KEY,
   `Fecha` datetime
 );
 
@@ -73,8 +74,10 @@ CREATE TABLE `Reserva` (
   `IdTransaccion` VARCHAR(200) PRIMARY KEY,
   `FechaInicio` DATETIME,
   `FechaSalida` DATETIME,
-  `NumeroPersonas` TINYINT,
-  `IdSede` INT
+  `NumeroHombres` INT DEFAULT 0,
+  `NumeroMujeres` INT DEFAULT 0,
+  `IdSede` INT,
+  FOREIGN KEY (`IdSede`) REFERENCES `Sede` (`Id`)
 );
 
 CREATE TABLE `Compra` (

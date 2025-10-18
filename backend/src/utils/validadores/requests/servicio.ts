@@ -20,7 +20,7 @@ export default class ServicioValidador extends BaseValidadorRequest<Servicio> {
             (obj?.Id === undefined || (typeof obj?.Id === "string" && isPositiveIntStringValid(obj.Id))) &&
             (obj?.Nombre === undefined || isValidString(obj?.Nombre, 40)) &&
             (obj?.Descripcion === undefined || isValidString(obj?.Descripcion, 100) || obj?.Descripcion === null) &&
-            (obj?.Estatus === undefined || typeof obj?.Estatus === "boolean")
+            (obj?.Estatus === undefined || obj?.Estatus === "true" || obj?.Estatus === "false")
         );
     }
 
@@ -42,7 +42,8 @@ export default class ServicioValidador extends BaseValidadorRequest<Servicio> {
         if (obj?.Id !== undefined) filtros.Id = Number(obj.Id);
         if (obj?.Nombre !== undefined) filtros.Nombre = obj.Nombre;
         if (obj?.Descripcion !== undefined) filtros.Descripcion = obj.Descripcion;
-        if (obj?.Estatus !== undefined && toBoolStrict(obj.Estatus)) filtros.Estatus = obj.Estatus === "true" ? true : false;
+        const b = obj?.Estatus !== undefined ? toBoolStrict(obj.Estatus) : null;
+        if (b !== null) filtros.Estatus = b;
 
         return filtros;
     }
