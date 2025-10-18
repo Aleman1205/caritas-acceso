@@ -40,3 +40,11 @@ export const dbPool: Pool = await mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0,
 });
+
+try {
+  const connection = await dbPool.getConnection();
+  console.log("Conectado a la base de datos MySQL");
+  connection.release();
+} catch (error) {
+  console.error("Error al conectar a MySQL:", error);
+}

@@ -17,3 +17,8 @@ VALUES
 (1, 2, 'Clases de natación en alberca olímpica', 50, 299.50, '07:00:00', '20:00:00'),
 (2, 3, 'Sesiones de yoga matutinas', 40, 199.00, '08:00:00', '10:00:00'),
 (3, 4, 'Spinning en grupo con instructor', 30, 150.00, '18:00:00', '19:00:00');
+
+INSERT INTO TipoUsuario (Id, Descripcion)
+VALUES
+(1,'Operador'),
+(2, 'Administrador');

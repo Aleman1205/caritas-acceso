@@ -1,4 +1,5 @@
 import express from "express";
+import { dbPool } from "./config/db/mysql.js";
 
 // Rutas principales
 import sedeRoutes from "./routes/sede.js";

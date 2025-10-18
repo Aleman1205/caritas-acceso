@@ -11,8 +11,8 @@ export default class UsuarioValidadorRequest extends BaseValidadorRequest<Usuari
             (obj?.Telefono === undefined || isValidString(obj.Telefono, 25)) &&
             (obj?.Nombre === undefined || isValidString(obj.Nombre, 70)) &&
             (obj?.Apellido === undefined || isValidString(obj.Apellido, 50)) &&
-            (obj?.FotoUrl === undefined || isValidString(obj.FotoUrl, 500)) &&
-            (obj?.FechaNacimiento === undefined || isValidTime(obj.FechaNacimiento)) &&
+            (obj?.FotoUrl === undefined || obj.FotoUrl==null ||isValidString(obj.FotoUrl, 500)) &&
+            (obj?.FechaNacimiento === null || obj.FechaNacimiento==null || !isNaN(Date.parse(obj.FechaNacimiento))) &&
             (obj?.IdTipoUsuario === undefined || isPositiveInt(obj.IdTipoUsuario))
         );
     }
@@ -24,7 +24,7 @@ export default class UsuarioValidadorRequest extends BaseValidadorRequest<Usuari
             (obj?.Nombre === undefined || isValidString(String(obj.Nombre), 70)) &&
             (obj?.Apellido === undefined || isValidString(String(obj.Apellido), 50)) &&
             (obj?.FotoUrl === undefined || isValidString(String(obj.FotoUrl), 500)) &&
-            (obj?.FechaNacimiento === undefined || isValidTime(String(obj.FechaNacimiento))) &&
+            (obj?.FechaNacimiento === undefined || isNaN(Date.parse(String(obj.FechaNacimiento)))) &&
             (obj?.IdTipoUsuario === undefined || isPositiveIntStringValid(String(obj.IdTipoUsuario)))
         );
     }

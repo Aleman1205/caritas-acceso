@@ -15,11 +15,14 @@ CREATE PROCEDURE AgregarUsuario (
   -- Creas un create procedure en el que sea agregue un usuario y que también cheque si dicho usuario, ya existe. 
   
 BEGIN
+    DECLARE tipoExiste INT DEFAULT 0;
+    DECLARE usuarioExiste INT DEFAULT 0;
+
     -- Verificar que no exista otro usuario con los mismos datos.
     IF NOT EXISTS (SELECT 1 FROM Usuario WHERE Nombre = nombre AND Apellido=apellido AND IdTipoUsuario=idTipoUsuario AND Email=email) THEN
         -- Verificar que el id en la tabla tipo de usuario exista 
         IF EXISTS (SELECT 1 FROM TipoUsuario WHERE Id = idTipoUsuario) THEN
-            INSERT INTO USUARIO (
+            INSERT INTO Usuario (
                 Email, Telefono, Nombre, Apellido, FotoUrl, FechaNacimiento, IdTipoUsuario
             )
             VALUES (

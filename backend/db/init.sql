@@ -111,9 +111,11 @@ ALTER TABLE `Reserva` ADD FOREIGN KEY (`IdSede`) REFERENCES `Sede` (`Id`);
 
 ALTER TABLE `Transaccion` ADD FOREIGN KEY (`Id`) REFERENCES `Compra` (`IdTransaccion`);
 
-ALTER TABLE `Compra` ADD FOREIGN KEY (`IdSede`) REFERENCES `SedeServicio` (`IdSede`);
+-- Falta esta
+ALTER TABLE `Compra` ADD FOREIGN KEY (`IdSede`) REFERENCES `SedeServicio` (`Id`);
 
-ALTER TABLE `Compra` ADD FOREIGN KEY (`IdServicio`) REFERENCES `SedeServicio` (`IdServicio`);
+-- Falta esta
+ALTER TABLE `Compra` ADD FOREIGN KEY (`IdServicio`) REFERENCES `SedeServicio` (`Id`);
 
 ALTER TABLE `Beneficiario` ADD FOREIGN KEY (`IdTransaccion`) REFERENCES `Transaccion` (`Id`);
 

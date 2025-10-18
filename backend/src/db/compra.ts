@@ -11,22 +11,21 @@ export default class CompraDbService extends BaseDbService<Compra, string> {
   constructor(readonly db: Pool) {
     super(db, "Compra", ALLOWED_FIELDS, ALLOWED_UPDATE_FIELDS, ["IdTransaccion"]);
   }
-
- // Crear una nueva compra usando el stored procedure CompraDeServicio.
-  public override async create(c: Compra): Promise<boolean> {
+  //Crear un nuevo usuario
+  public override async create(u: Compra): Promise<boolean> {
     try {
-      const [result] = await this.db.query<ResultSetHeader>(
-        "CALL CompraDeServicio(?, ?, ?, ?, ?)",
-        [
-          c.IdTransaccion ?? null,
-          c.Total ?? null,
-          c.Fecha ?? null,
-          c.IdSede ?? null,
-          c.IdServicio ?? null,
-        ]
-      );
+      const [rows]: any = await this.db.query("CALL CompraDeServicio(?, ?, ?, ?, ?)", [
+        u.IdTransaccion ?? null,
+        u.Total ?? null,
+        u.Fecha ?? null,
+        u.IdSede ?? null,
+        u.IdServicio ?? null
+    ]);
+    // El resultado real viene en rows[0][0]
+    const resultado = rows?.[0]?.[0];
+    console.log("Resultado de Registro de Compra:", resultado);
 
-      return (result as any).affectedRows > 0;
+    return resultado?.codigo === 1;
     } catch (err) {
       console.error("Error al registrar compra:", err);
       return false;

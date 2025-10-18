@@ -13,20 +13,20 @@ export default class UsuarioDbService extends BaseDbService<Usuario, string> {
   //Crear un nuevo usuario
   public override async create(u: Usuario): Promise<boolean> {
     try {
-      const [result] = await this.db.query<ResultSetHeader>(
-        "CALL AgregarUsuario(?, ?, ?, ?, ?, ?, ?)",
-        [
-          u.Email ?? null,
-          u.Telefono ?? null,
-          u.Nombre ?? null,
-          u.Apellido ?? null,
-          u.FotoUrl ?? null,
-          u.FechaNacimiento ?? null,
-          u.IdTipoUsuario ?? null,
-        ]
-      );
+      const [rows]: any = await this.db.query("CALL AgregarUsuario(?, ?, ?, ?, ?, ?, ?)", [
+        u.Email ?? null,
+        u.Telefono ?? null,
+        u.Nombre ?? null,
+        u.Apellido ?? null,
+        u.FotoUrl ?? null,
+        u.FechaNacimiento ?? null,
+        u.IdTipoUsuario ?? null,
+    ]);
+    // El resultado real viene en rows[0][0]
+    const resultado = rows?.[0]?.[0];
+    console.log("Resultado SP:", resultado);
 
-      return (result as any).affectedRows > 0;
+    return resultado?.codigo === 1;
     } catch (err) {
       console.error("Error al crear usuario:", err);
       return false;

@@ -44,6 +44,5 @@ export default class UsuarioHttpHandler extends BaseHttpHandler<Usuario, string>
         next(error);
         }
     }
-
 }
 
