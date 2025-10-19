@@ -1,20 +1,33 @@
-const { createParada } = require('../handlers/parada.handler');
+import { createParadaDB } from "../handlers/parada.handler.js";
 
-// Create a new parada
-const createParadaController = async (req, res) => {
+/** POST /web/parada
+ * body: { nombre, descripcion?, ubicacion, estatus?, idsede }
+ * respuesta: { success, message, data }
+ */
+export async function createParadaController(req, res) {
   try {
-    const { nombre, descripcion, ubicacion, estatus, idsede } = req.body;
-
+    const { nombre, descripcion, ubicacion, estatus, idsede } = req.body || {};
     if (!nombre || !ubicacion || !idsede) {
-      return res.status(400).json({ error: 'Nombre, ubicación e idSede son obligatorios.' });
+      return res.status(400).json({
+        success: false,
+        message: "nombre, ubicacion e idsede son obligatorios.",
+        data: null,
+      });
     }
 
-    const parada = await createParada({ nombre, descripcion, ubicacion, estatus, idsede });
-    res.status(201).json(parada);
-  } catch (err) {
-    console.error('Error creating parada:', err);
-    res.status(500).json({ error: 'Error interno del servidor.' });
-  }
-};
+    const creada = await createParadaDB({ nombre, descripcion, ubicacion, estatus, idsede });
 
-module.exports = { createParadaController };
+    return res.status(201).json({
+      success: true,
+      message: "Parada creada correctamente.",
+      data: creada,
+    });
+  } catch (err) {
+    console.error("Error creating parada:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      data: null,
+    });
+  }
+}

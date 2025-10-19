@@ -1,15 +1,34 @@
-const pool = require('../../compartido/db/pool');
+import { pool } from "../../compartido/db/pool.js";
 
-// Insert new sede-servicio relation
-const createSedeServicio = async ({ descripcion, capacidad, precio, horainicio, horafinal, estatus, idsede, idservicio }) => {
+/**
+ * Inserta una nueva relación sede-servicio y devuelve el registro creado.
+ */
+export async function createSedeServicioDB({
+  descripcion,
+  capacidad,
+  precio,
+  horainicio,
+  horafinal,
+  estatus,
+  idsede,
+  idservicio,
+}) {
   const query = `
-    INSERT INTO sedeservicio (descripcion, capacidad, precio, horainicio, horafinal, estatus, idsede, idservicio)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    RETURNING *;
+    insert into sedeservicio
+      (descripcion, capacidad, precio, horainicio, horafinal, estatus, idsede, idservicio)
+    values ($1, $2, $3, $4, $5, coalesce($6, true), $7, $8)
+    returning *;
   `;
-  const values = [descripcion, capacidad, precio, horainicio, horafinal, estatus, idsede, idservicio];
+  const values = [
+    descripcion ?? null,
+    capacidad ?? null,
+    precio ?? null,
+    horainicio ?? null,
+    horafinal ?? null,
+    estatus,
+    Number(idsede),
+    Number(idservicio),
+  ];
   const { rows } = await pool.query(query, values);
   return rows[0];
-};
-
-module.exports = { createSedeServicio };
+}

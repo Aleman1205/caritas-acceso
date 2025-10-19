@@ -1,8 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const { createParadaController } = require('../controllers/parada.controller');
+import express from "express";
+import { createParadaController } from "../controllers/parada.controller.js";
 
-// POST /parada
-router.post('/', createParadaController);
+export const router = express.Router();
 
-module.exports = router;
+// POST /web/parada
+router.post("/", createParadaController);
+
+export default router; // <- necesario para el autoload en ESM

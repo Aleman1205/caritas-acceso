@@ -1,20 +1,61 @@
-const { createSedeServicio } = require('../handlers/sedeservicio.handler');
+import { createSedeServicioDB } from "../handlers/sedeservicio.handler.js";
 
-// Create new SedeServicio relation
-const createSedeServicioController = async (req, res) => {
+/**
+ * POST /web/sedeservicio
+ * body: { descripcion?, capacidad?, precio?, horainicio?, horafinal?, estatus?, idsede, idservicio }
+ * resp: { success, message, data }
+ */
+export async function createSedeServicioController(req, res) {
   try {
-    const { descripcion, capacidad, precio, horainicio, horafinal, estatus, idsede, idservicio } = req.body;
+    const {
+      descripcion,
+      capacidad,
+      precio,
+      horainicio,
+      horafinal,
+      estatus,
+      idsede,
+      idservicio,
+    } = req.body || {};
 
     if (!idsede || !idservicio) {
-      return res.status(400).json({ error: 'IdSede e IdServicio son obligatorios.' });
+      return res.status(400).json({
+        success: false,
+        message: "idsede e idservicio son obligatorios.",
+        data: null,
+      });
     }
 
-    const relation = await createSedeServicio({ descripcion, capacidad, precio, horainicio, horafinal, estatus, idsede, idservicio });
-    res.status(201).json(relation);
-  } catch (err) {
-    console.error('Error creating sede-servicio relation:', err);
-    res.status(500).json({ error: 'Error interno del servidor.' });
-  }
-};
+    if (Number.isNaN(Number(idsede)) || Number.isNaN(Number(idservicio))) {
+      return res.status(400).json({
+        success: false,
+        message: "idsede e idservicio deben ser enteros.",
+        data: null,
+      });
+    }
 
-module.exports = { createSedeServicioController };
+    const relation = await createSedeServicioDB({
+      descripcion,
+      capacidad,
+      precio,
+      horainicio,
+      horafinal,
+      estatus,
+      idsede,
+      idservicio,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Relación sede-servicio creada correctamente.",
+      data: relation,
+    });
+  } catch (err) {
+    console.error("Error creating sede-servicio relation:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      data: null,
+    });
+  }
+}

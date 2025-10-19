@@ -1,15 +1,13 @@
-const pool = require('../../compartido/db/pool');
+import { pool } from "../../compartido/db/pool.js";
 
-// Insert new parada
-const createParada = async ({ nombre, descripcion, ubicacion, estatus, idsede }) => {
+/** Inserta una nueva parada y devuelve el registro creado */
+export async function createParadaDB({ nombre, descripcion, ubicacion, estatus, idsede }) {
   const query = `
-    INSERT INTO parada (nombre, descripcion, ubicacion, estatus, idsede)
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING *;
+    insert into parada (nombre, descripcion, ubicacion, estatus, idsede)
+    values ($1, $2, $3, coalesce($4, true), $5)
+    returning *;
   `;
-  const values = [nombre, descripcion, ubicacion, estatus, idsede];
+  const values = [nombre, descripcion ?? null, ubicacion, estatus, idsede];
   const { rows } = await pool.query(query, values);
   return rows[0];
-};
-
-module.exports = { createParada };
+}
