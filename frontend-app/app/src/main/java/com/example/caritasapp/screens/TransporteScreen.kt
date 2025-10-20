@@ -19,11 +19,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.caritasapp.navigation.Screen
 import com.example.caritasapp.ui.theme.*
+import com.example.caritasapp.viewmodel.CaritasViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransporteScreen(navController: NavController) {
+fun TransporteScreen(navController: NavController, viewModel: CaritasViewModel) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
   val snackbarHostState = remember { SnackbarHostState() }

@@ -1,5 +1,6 @@
 package com.example.caritasapp.network
 
+import com.example.caritasapp.navigation.ReservasResponse
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -12,6 +13,9 @@ interface ApiService {
     @Body reserva: ReservaRequest
   ): Response<ReservaResponse>
 
-  @GET("reservas/{telefono}")
-  suspend fun getReservaByTelefono(@Path("telefono") telefono: String): Response<Map<String, Any>>
+  @GET("movil/reservas/{telefono}")
+  suspend fun getReservasPorTelefono(
+    @Path("telefono") telefono: String
+  ): Response<ReservasResponse>
+
 }

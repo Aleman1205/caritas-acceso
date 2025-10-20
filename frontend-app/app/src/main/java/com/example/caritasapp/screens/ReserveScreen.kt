@@ -13,8 +13,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.caritasapp.navigation.Screen
 import com.example.caritasapp.ui.theme.*
@@ -24,16 +22,16 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReserveScreen(navController: NavHostController) {
-  val viewModel: CaritasViewModel = viewModel()
-  var selectedDate by viewModel.selectedDate
-  var selectedHour by viewModel.selectedHour
-  var selectedMinute by viewModel.selectedMinute
-  var amPm by viewModel.amPm
+fun ReserveScreen(navController: NavHostController, viewModel: CaritasViewModel) {
 
+  val selectedDate by viewModel.selectedDate
+  val selectedHour by viewModel.selectedHour
+  val selectedMinute by viewModel.selectedMinute
+  val amPm by viewModel.amPm
   val sedeName by viewModel.selectedSedeName
 
   val openDatePicker = remember { mutableStateOf(false) }
+  val showError = remember { mutableStateOf(false) }
 
   if (openDatePicker.value) {
     val datePickerState = rememberDatePickerState()
@@ -43,15 +41,15 @@ fun ReserveScreen(navController: NavHostController) {
         TextButton(
           onClick = {
             datePickerState.selectedDateMillis?.let {
-              val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-              viewModel.selectedDate.value = formatter.format(Date(it))
+              val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+              viewModel.selectedDate.value = formatter.format(Date(it)) // ✅ save directly
             }
             openDatePicker.value = false
           }
         ) { Text("Aceptar", color = CaritasBlueTeal) }
       },
       dismissButton = {
-        TextButton(onClick = { openDatePicker.value = false}) {
+        TextButton(onClick = { openDatePicker.value = false }) {
           Text("Cancelar", color = CaritasBlueTeal)
         }
       }
@@ -121,21 +119,35 @@ fun ReserveScreen(navController: NavHostController) {
         modifier = Modifier.padding(bottom = 16.dp)
       )
 
+      // ✅ Directly update ViewModel values on change
       TimeSelector(
         selectedHour = selectedHour,
         selectedMinute = selectedMinute,
         amPm = amPm,
-        onHourChange = { selectedHour = it },
-        onMinuteChange = { selectedMinute = it },
-        onPeriodChange = { amPm = it }
+        onHourChange = { viewModel.selectedHour.value = it },
+        onMinuteChange = { viewModel.selectedMinute.value = it },
+        onPeriodChange = { viewModel.amPm.value = it }
       )
 
       Spacer(modifier = Modifier.height(48.dp))
 
+      if (showError.value) {
+        Text(
+          text = "Selecciona una fecha antes de continuar",
+          color = Color.Red,
+          textAlign = TextAlign.Center,
+          modifier = Modifier.padding(bottom = 12.dp)
+        )
+      }
+
       Button(
         onClick = {
-          navController.navigate(
-            Screen.ReservationForm.route)
+          if (viewModel.selectedDate.value.isEmpty()) {
+            showError.value = true
+          } else {
+            showError.value = false
+            navController.navigate(Screen.ReservationForm.route)
+          }
         },
         colors = ButtonDefaults.buttonColors(containerColor = CaritasBlueTeal),
         shape = RoundedCornerShape(24.dp),
@@ -153,6 +165,7 @@ fun ReserveScreen(navController: NavHostController) {
     }
   }
 }
+
 
 @Composable
 fun TimeSelector(

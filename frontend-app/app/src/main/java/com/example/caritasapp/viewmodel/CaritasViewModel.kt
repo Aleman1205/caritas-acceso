@@ -7,7 +7,7 @@ class CaritasViewModel : ViewModel() {
   var selectedSedeId = mutableStateOf<Int?>(null)
   var selectedSedeName = mutableStateOf<String?>(null)
 
-  var selectedDate = mutableStateOf("")
+  var selectedDate = mutableStateOf("")  // fechaInicio
   var selectedHour = mutableStateOf("8")
   var selectedMinute = mutableStateOf("00")
   var amPm = mutableStateOf("AM")
@@ -18,5 +18,6 @@ class CaritasViewModel : ViewModel() {
   var hombres = mutableStateOf(0)
   var mujeres = mutableStateOf(0)
 
-  var clave = mutableStateOf("")
+  var reservationClave = mutableStateOf("")
+  var hasActiveReservation = mutableStateOf(false)
 }
