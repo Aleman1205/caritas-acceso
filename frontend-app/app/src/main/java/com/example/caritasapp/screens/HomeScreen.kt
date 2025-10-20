@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,59 +24,74 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.ModifierInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.caritasapp.navigation.Screen
+import com.example.caritasapp.network.ApiService
+import com.example.caritasapp.network.RetrofitClient
 import com.example.caritasapp.ui.theme.*
+import com.example.caritasapp.viewmodel.CaritasViewModel
 import kotlinx.coroutines.launch
+import java.lang.Exception
 
 data class Sede(
-  val name: String,
-  val address: String,
-  val contact: String
+  val id: Int,
+  val nombre: String,
+  val ubicacion: String,
+  val ciudad: String,
+  val horainicio: String,
+  val horafinal: String,
+  val descripcion: String,
+  val capacidadtotal: Int
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavHostController) {
   var selectedSede by rememberSaveable { mutableStateOf<String?>(null) }
+  var selectedSedeId by remember { mutableStateOf<Int?>(null) }
   var hasReservation by rememberSaveable { mutableStateOf(false) }
 
   val sedeSelected = selectedSede != null
   val transportEnabled = hasReservation
-
+  val viewModel: CaritasViewModel = viewModel()
   var showSedeSheet by remember { mutableStateOf(false) }
 
-  // Mock sedes list (replace with backend data later)
-  val sedes = listOf(
-    Sede(
-      "Cáritas Monterrey - Centro",
-      "Av. Pino Suárez 305, Centro, Monterrey, N.L.",
-      "Tel: 81 1234 5678"
-    ),
-    Sede(
-      "Cáritas Monterrey - Norte",
-      "Calle Lincoln 1220, Col. Industrial, Monterrey, N.L.",
-      "Tel: 81 8765 4321"
-    ),
-    Sede(
-      "Cáritas Monterrey - Sur",
-      "Av. Garza Sada 4500, Contry, Monterrey, N.L.",
-      "Tel: 81 1357 2468"
-    ),
-    Sede(
-      "Cáritas Monterrey - Guadalupe",
-      "Av. Miguel Alemán 2100, Guadalupe, N.L.",
-      "Tel: 81 9753 8642"
-    )
-  )
+  val scope = rememberCoroutineScope()
+  var sedes by remember { mutableStateOf<List<Sede>>(emptyList()) }
+  var isLoading by remember { mutableStateOf(true) }
+  var errorMessage by remember { mutableStateOf<String?>(null) }
+
+  LaunchedEffect(Unit) {
+    scope.launch {
+      try {
+        val api = RetrofitClient.instance.create(ApiService::class.java)
+        val response = api.getSedes()
+        if (response.isSuccessful) {
+          val data = response.body()
+          if (data?.success == true) {
+            sedes = data.sedes
+          } else {
+            errorMessage = "Error: No se pudo obtener las sedes"
+          }
+        } else {
+          errorMessage = "Error ${response.code()}"
+        }
+      } catch (e: Exception) {
+        errorMessage = "Error: ${e.message}"
+      } finally {
+        isLoading = false
+      }
+    }
+  }
+
 
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  val scope = rememberCoroutineScope()
-
   if (showSedeSheet) {
     ModalBottomSheet(
       onDismissRequest = { showSedeSheet = false },
@@ -97,47 +113,65 @@ fun HomeScreen(navController: NavHostController) {
           )
           Divider()
 
-          LazyColumn(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(top = 12.dp, bottom = 40.dp)
-          ) {
-            items(sedes) { sede ->
-              Column(
+          when {
+            isLoading -> {
+              Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = CaritasNavy)
+              }
+            }
+            errorMessage != null -> {
+              Text(
+                text = errorMessage ?: "Error desconocido",
+                color = Color.Red,
+                modifier = Modifier.padding(16.dp)
+              )
+            }
+            else -> {
+              LazyColumn(
                 modifier = Modifier
                   .fillMaxWidth()
-                  .clickable {
-                    selectedSede = sede.name
-                    hasReservation = false
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                      showSedeSheet = false
-                    }
-                  }
-                  .padding(vertical = 14.dp)
+                  .padding(top = 12.dp, bottom = 40.dp)
               ) {
-                Text(
-                  text = sede.name,
-                  fontSize = 20.sp,
-                  color = CaritasNavy,
-                  fontWeight = FontWeight.Bold
-                )
-                Text(
-                  text = sede.address,
-                  fontSize = 16.sp,
-                  color = CaritasNavy.copy(alpha = 0.7f)
-                )
-                Text(
-                  text = sede.contact,
-                  fontSize = 16.sp,
-                  color = CaritasNavy.copy(alpha = 0.6f)
-                )
+                items(sedes) { sede ->
+                  Column(
+                    modifier = Modifier
+                      .fillMaxWidth()
+                      .clickable {
+                        viewModel.selectedSedeName.value = sede.nombre
+                        viewModel.selectedSedeId.value = sede.id
+                        hasReservation = false
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                          showSedeSheet = false
+                        }
+                      }
+                      .padding(vertical = 14.dp)
+                  ) {
+                    Text(
+                      text = sede.nombre,
+                      fontSize = 20.sp,
+                      color = CaritasNavy,
+                      fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                      text = sede.ubicacion,
+                      fontSize = 16.sp,
+                      color = CaritasNavy.copy(alpha = 0.7f)
+                    )
+                    Text(
+                      text = sede.ciudad,
+                      fontSize = 16.sp,
+                      color = CaritasNavy.copy(alpha = 0.6f)
+                    )
+                  }
+                  Divider()
+                }
               }
-              Divider()
             }
           }
         }
       }
     }
+
 
 
   Surface(

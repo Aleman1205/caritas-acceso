@@ -13,20 +13,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.caritasapp.navigation.Screen
 import com.example.caritasapp.ui.theme.*
+import com.example.caritasapp.viewmodel.CaritasViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReserveScreen(navController: NavHostController) {
-  var selectedDate by remember { mutableStateOf("") }
-  var selectedHour by remember { mutableStateOf("8") }
-  var selectedMinute by remember { mutableStateOf("00") }
-  var amPm by remember { mutableStateOf("AM") }
+  val viewModel: CaritasViewModel = viewModel()
+  var selectedDate by viewModel.selectedDate
+  var selectedHour by viewModel.selectedHour
+  var selectedMinute by viewModel.selectedMinute
+  var amPm by viewModel.amPm
+
+  val sedeName by viewModel.selectedSedeName
 
   val openDatePicker = remember { mutableStateOf(false) }
 
@@ -39,7 +44,7 @@ fun ReserveScreen(navController: NavHostController) {
           onClick = {
             datePickerState.selectedDateMillis?.let {
               val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-              selectedDate = formatter.format(Date(it))
+              viewModel.selectedDate.value = formatter.format(Date(it))
             }
             openDatePicker.value = false
           }
@@ -71,6 +76,13 @@ fun ReserveScreen(navController: NavHostController) {
         fontWeight = FontWeight.Bold,
         color = CaritasNavy,
         modifier = Modifier.padding(bottom = 28.dp)
+      )
+
+      Text(
+        text = sedeName ?: "Sin sede seleccionada",
+        fontSize = 18.sp,
+        color = CaritasNavy.copy(alpha = 0.7f),
+        modifier = Modifier.padding(bottom = 16.dp)
       )
 
       Box(
@@ -122,9 +134,8 @@ fun ReserveScreen(navController: NavHostController) {
 
       Button(
         onClick = {
-          navController.navigate(Screen.ReservationForm.route) {
-            popUpTo(Screen.Home.route) { inclusive = true }
-          }
+          navController.navigate(
+            Screen.ReservationForm.route)
         },
         colors = ButtonDefaults.buttonColors(containerColor = CaritasBlueTeal),
         shape = RoundedCornerShape(24.dp),

@@ -1,6 +1,5 @@
 package com.example.caritasapp.screens
 
-import android.R.attr.enabled
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,29 +18,44 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.caritasapp.navigation.Screen
+import com.example.caritasapp.network.ApiService
+import com.example.caritasapp.network.ReservaRequest
+import com.example.caritasapp.network.RetrofitClient
 import com.example.caritasapp.ui.theme.*
+import com.example.caritasapp.viewmodel.CaritasViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReservationFormScreen(navController: NavHostController) {
-  var nombre by remember { mutableStateOf("") }
-  var telefono by remember { mutableStateOf("") }
-  var correo by remember { mutableStateOf("") }
+  val fecha = navController.currentBackStackEntry?.arguments?.getString("fecha") ?: ""
+  val hora = navController.currentBackStackEntry?.arguments?.getString("hora") ?: "8"
+  val minuto = navController.currentBackStackEntry?.arguments?.getString("minuto") ?: "00"
+  val periodo = navController.currentBackStackEntry?.arguments?.getString("periodo") ?: "AM"
 
+  val viewModel: CaritasViewModel = viewModel()
+
+  var nombre by viewModel.nombre
+  var telefono by viewModel.telefono
+  var correo by viewModel.correo
+  var menCount by viewModel.hombres
+  var womenCount by viewModel.mujeres
+  var idsede by viewModel.selectedSedeId
+
+  var isLoading by remember { mutableStateOf(false) }
+  var errorMessage by remember { mutableStateOf<String?>(null) }
+
+  val scope = rememberCoroutineScope()
   var lada by remember { mutableStateOf("+52") }
   var selectedFlag by remember { mutableStateOf("🇲🇽") }
   var showLadaMenu by remember { mutableStateOf(false) }
 
+  val isFormValid = nombre.isNotBlank() && telefono.isNotBlank()
   var nombreError by remember { mutableStateOf(false) }
   var telefonoError by remember { mutableStateOf(false) }
-
-  var menCount by remember { mutableStateOf(0) }
-  var womenCount by remember { mutableStateOf(0) }
-
-  val isFormValid = nombre.isNotBlank() && telefono.isNotBlank()
 
   val ladaList = listOf(
     Triple("🇲🇽", "+52", "México"),
@@ -77,7 +91,7 @@ fun ReservationFormScreen(navController: NavHostController) {
         onValueChange = {
           nombre = it
           nombreError = it.isBlank()
-                        },
+        },
         label = { Text("Nombre completo") },
         singleLine = true,
         isError = nombreError,
@@ -92,7 +106,7 @@ fun ReservationFormScreen(navController: NavHostController) {
           errorBorderColor = Color.Red
         )
       )
-      if(nombreError) {
+      if (nombreError) {
         Text(
           text = "El nombre es obligatorio",
           color = Color.Red,
@@ -261,27 +275,61 @@ fun ReservationFormScreen(navController: NavHostController) {
 
       Button(
         onClick = {
-          nombreError = nombre.isBlank()
-          telefonoError = telefono.isBlank()
+          if (nombre.isBlank() || telefono.isBlank()) return@Button
+          isLoading = true
+          errorMessage = null
 
-          if (isFormValid) {
-            navController.navigate(Screen.ReservationQR.route)
-           }
+          val api = RetrofitClient.instance.create(ApiService::class.java)
+          val request = ReservaRequest(
+            telefono = telefono,
+            nombre = nombre,
+            correo = if (correo.isBlank()) null else correo,
+            idsede = idsede,
+            fechainicio = fecha,
+            horacheckin = "$hora:$minuto $periodo",
+            hombres = menCount,
+            mujeres = womenCount
+          )
+
+          scope.launch {
+            try {
+              val response = api.crearReserva(request)
+              if (response.isSuccessful && response.body()?.success == true) {
+                val clave = response.body()?.clave ?: ""
+                navController.navigate(Screen.ReservationQR.route + "?clave=$clave")
+              } else {
+                errorMessage = "Error ${response.code()}"
+              }
+            } catch (e: Exception) {
+              errorMessage = "Error: ${e.message}"
+            } finally {
+              isLoading = false
+            }
+          }
         },
-        enabled = isFormValid,
+        enabled = !isLoading && nombre.isNotBlank() && telefono.isNotBlank(),
         colors = ButtonDefaults.buttonColors(
-          containerColor = if (isFormValid) CaritasBlueTeal else CaritasBlueTeal.copy(alpha = 0.4f)
+          containerColor = if (nombre.isNotBlank() && telefono.isNotBlank())
+            CaritasBlueTeal else CaritasBlueTeal.copy(alpha = 0.4f)
         ),
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier
           .fillMaxWidth()
           .height(70.dp)
       ) {
+        if (isLoading) {
+          CircularProgressIndicator(color = Color.White, modifier = Modifier.size(28.dp))
+        } else {
+          Text("Continuar", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        }
+      }
+
+      errorMessage?.let {
         Text(
-          text = "Continuar",
-          fontSize = 20.sp,
-          fontWeight = FontWeight.Bold,
-          color = Color.White
+          text = it,
+          color = Color.Red,
+          fontSize = 14.sp,
+          modifier = Modifier.padding(top = 8.dp)
         )
       }
     }

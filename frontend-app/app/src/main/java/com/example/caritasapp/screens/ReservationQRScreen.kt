@@ -28,8 +28,8 @@ fun ReservationQRScreen(navController: NavHostController) {
   val scope = rememberCoroutineScope()
 
   // Simulated backend hash
-  val randomHash = remember { UUID.randomUUID().toString().replace("-", "").take(12) }
-  val qrBitmap = remember(randomHash) { generateQRCode(randomHash) }
+  val clave = navController.currentBackStackEntry?.arguments?.getString("clave") ?: ""
+  val qrBitmap = remember(clave) { generateQRCode(clave) }
 
   Scaffold(
     containerColor = Color.White,
@@ -66,7 +66,7 @@ fun ReservationQRScreen(navController: NavHostController) {
       Spacer(modifier = Modifier.height(20.dp))
 
       Text(
-        text = "Clave: $randomHash",
+        text = "Clave: $clave",
         fontSize = 18.sp,
         color = CaritasNavy,
         fontWeight = FontWeight.Medium,
