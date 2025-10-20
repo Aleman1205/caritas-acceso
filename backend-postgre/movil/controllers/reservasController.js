@@ -3,16 +3,19 @@ import crypto from "crypto";
 
 export async function crearReserva(req, res) {
     try {
+        console.log("BODY RECIBIDO:", req.body);
+
         const {
             nombre,
             telefono,
             email,
             hombres,
             mujeres,
-            fechaInicio,
-            horaCheckIn,
-            idSede,
+            fechainicio,
+            horacheckin,
+            idsede,
         } = req.body;
+
 
         const checkExisting = await pool.query(
             `
@@ -50,9 +53,9 @@ export async function crearReserva(req, res) {
 
         await pool.query(
             `INSERT INTO Reserva(
-            IdTransaccion, FechaInicio, HoraCheckIn, Hombres, Mujeres, IdSede, IdBeneficiario
+                IdTransaccion, FechaInicio, HoraCheckIn, Hombres, Mujeres, IdSede, IdBeneficiario
             ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-             [transactionId, fechaInicio, horaCheckIn, hombres, mujeres, idSede, idBeneficiario]
+            [transactionId, fechainicio, horacheckin, hombres, mujeres, idsede, idBeneficiario]
         );
 
         const clave = crypto.createHash("sha256").update(transactionId).digest("hex").slice(0, 12);
