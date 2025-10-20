@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.caritasapp.ui.theme.*
+import com.example.caritasapp.viewmodel.CaritasViewModel
 
 data class ServicioDetalle(
   val titulo: String,
@@ -23,7 +24,7 @@ data class ServicioDetalle(
 )
 
 @Composable
-fun ConsultarServiciosScreen(navController: NavController) {
+fun ConsultarServiciosScreen(navController: NavController, viewModel: CaritasViewModel) {
   val sede = "Cáritas Monterrey - Centro"
   val direccion = "Av. Pino Suárez 305, Centro Monterrey, N.L."
   val contacto = "Tel: 81 1234 5678"
