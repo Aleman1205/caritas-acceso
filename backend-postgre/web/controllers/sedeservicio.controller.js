@@ -1,4 +1,4 @@
-import { createSedeServicioDB } from "../handlers/sedeservicio.handler.js";
+import { createSedeServicioDB, getSedeServicioByIdDB } from "../handlers/sedeservicio.handler.js";
 
 /**
  * POST /web/sedeservicio
@@ -52,6 +52,48 @@ export async function createSedeServicioController(req, res) {
     });
   } catch (err) {
     console.error("Error creating sede-servicio relation:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      data: null,
+    });
+  }
+}
+
+/**
+ * GET /web/sedeservicio/:id
+ * params: { id }
+ * resp: { success, message, data }
+ */
+export async function getSedeServicioByIdController(req, res) {
+  try {
+    const { id } = req.params;
+
+    if (!id || Number.isNaN(Number(id))) {
+      return res.status(400).json({
+        success: false,
+        message: "El parámetro 'id' es obligatorio y debe ser un número.",
+        data: null,
+      });
+    }
+
+    const relacion = await getSedeServicioByIdDB(id);
+
+    if (!relacion) {
+      return res.status(404).json({
+        success: false,
+        message: `No se encontró una relación sede-servicio con id ${id}.`,
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Relación sede-servicio obtenida correctamente.",
+      data: relacion,
+    });
+  } catch (err) {
+    console.error("Error fetching sede-servicio:", err);
     return res.status(500).json({
       success: false,
       message: "Error interno del servidor.",

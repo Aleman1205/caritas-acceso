@@ -32,3 +32,17 @@ export async function createSedeServicioDB({
   const { rows } = await pool.query(query, values);
   return rows[0];
 }
+
+/**
+ * Obtiene una relación sede-servicio por su ID.
+ */
+export async function getSedeServicioByIdDB(id) {
+  const query = `
+    select * from sedeservicio
+    where id = $1
+    limit 1;
+  `;
+  const values = [Number(id)];
+  const { rows } = await pool.query(query, values);
+  return rows[0] || null;
+}

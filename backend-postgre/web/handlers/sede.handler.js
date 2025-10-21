@@ -1,8 +1,8 @@
+/*getSedeByNombreDB */ 
+
 import { pool } from "../../compartido/db/pool.js";
 
-/**
- * Inserta un servicio y devuelve el registro creado.
- */
+/*
 export async function createServicioDB({ nombre, descripcion, estatus }) {
   const query = `
     insert into servicio (nombre, descripcion, estatus)
@@ -13,11 +13,12 @@ export async function createServicioDB({ nombre, descripcion, estatus }) {
   const { rows } = await pool.query(query, values);
   return rows[0];
 }
+  */
 
-export async function getServicioByNombreDB(nombre) {
+export async function getSedeByNombreDB(nombre) {
   const query = `
-    SELECT id, nombre, descripcion, estatus
-    FROM servicio
+    SELECT id, nombre, ubicacion, ciudad, horainicio, horafinal, descripcion
+    FROM sede
     WHERE nombre = $1;
   `;
   const values = [nombre];

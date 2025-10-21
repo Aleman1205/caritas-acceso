@@ -11,3 +11,15 @@ export async function createParadaDB({ nombre, descripcion, ubicacion, estatus, 
   const { rows } = await pool.query(query, values);
   return rows[0];
 }
+
+/** Obtiene una parada por su nombre */
+export async function getParadaByNombreDB(nombre) {
+  const query = `
+    select * from parada
+    where lower(nombre) = lower($1)
+    limit 1;
+  `;
+  const values = [nombre];
+  const { rows } = await pool.query(query, values);
+  return rows[0] || null;
+}
