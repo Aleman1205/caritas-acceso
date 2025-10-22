@@ -1,97 +1,178 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { useEffect, useMemo, useState } from 'react';
+import { api, type Sede } from '@/lib/api';
 
-type Parada = {
+type ParadaRow = {
   Id: number;
   Nombre: string;
+  Descripcion?: string | null;
+  Ubicacion?: string | null;
   Estatus?: boolean;
+  IdSede?: number | null;
 };
 
+function toArray<T>(x: any): T[] {
+  if (!x) return [];
+  if (Array.isArray(x)) return x as T[];
+  if (Array.isArray(x?.data)) return x.data as T[];
+  return [];
+}
+
 export default function SolicitudesTransportePage() {
-  const [rows, setRows] = useState<Parada[]>([]);
+  // datos
+  const [sedes, setSedes] = useState<Sede[]>([]);
+  const [rows, setRows] = useState<ParadaRow[]>([]);
+
+  // ui
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [q, setQ] = useState('');
 
-  const [q, setQ] = useState<string>('');
-
-  const [nombre, setNombre] = useState<string>('');
-  const [estatus, setEstatus] = useState<boolean>(true);
+  // form
   const [editId, setEditId] = useState<number | null>(null);
+  const [nombre, setNombre] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [ubicacion, setUbicacion] = useState('');
+  const [estatus, setEstatus] = useState(true);
+  const [idSede, setIdSede] = useState<number | ''>('');
 
-  async function load() {
+  // carga
+  async function cargar() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const data = await api.getParadas(q ? { Nombre: q } : undefined);
-      const norm: Parada[] = (data || []).map((p: any) => ({
-        Id: Number(p.Id),
-        Nombre: String(p.Nombre ?? ''),
-        Estatus: typeof p.Estatus === 'boolean' ? p.Estatus : Boolean(p.Estatus),
-      }));
+      const [sd, pd] = await Promise.all([
+        api.getSedes(),               // ya lo tienes por otras pantallas
+        api.getParadasWeb(),          // NUEVO método web (bloque de api.ts abajo)
+      ]);
+
+      setSedes(toArray<Sede>(sd));
+
+      const norm = toArray<any>(pd).map((p) => ({
+        Id: Number(p.id ?? p.Id ?? 0),
+        Nombre: String(p.nombre ?? p.Nombre ?? ''),
+        Descripcion: p.descripcion ?? null,
+        Ubicacion: p.ubicacion ?? null,
+        Estatus: typeof p.estatus === 'boolean' ? p.estatus : Boolean(p.estatus ?? p.Estatus),
+        IdSede: p.idsede != null ? Number(p.idsede) : (p.IdSede ?? null),
+      })) as ParadaRow[];
+
       setRows(norm);
-    } catch (err: any) {
-      setErrorMsg(err?.message || 'Error al cargar');
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Error al cargar');
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    cargar();
   }, []);
 
+  // filtro por nombre en cliente (el backend no tiene search)
+  const filas = useMemo(() => {
+    if (!q.trim()) return rows;
+    const s = q.trim().toLowerCase();
+    return rows.filter((r) => r.Nombre.toLowerCase().includes(s));
+  }, [rows, q]);
+
+  function limpiarForm() {
+    setEditId(null);
+    setNombre('');
+    setDescripcion('');
+    setUbicacion('');
+    setEstatus(true);
+    setIdSede('');
+  }
+
   async function handleCreate() {
+    if (!nombre.trim()) return setErrorMsg('El nombre es obligatorio.');
+    const sedeNum = typeof idSede === 'number' ? idSede : Number(idSede || 0);
+    if (!sedeNum) return setErrorMsg('Debes seleccionar una sede.');
+    setLoading(true);
+    setErrorMsg(null);
     try {
-      setErrorMsg(null);
-      await api.createParada({ Nombre: nombre, Estatus: estatus });
-      setNombre('');
-      setEstatus(true);
-      await load();
-    } catch (err: any) {
-      setErrorMsg(err?.message || 'Error al crear');
+      await api.createParadaWeb({
+        nombre: nombre.trim(),
+        descripcion: descripcion.trim() || null,
+        ubicacion: ubicacion.trim() || null,
+        estatus,
+        idsede: sedeNum,
+      });
+      limpiarForm();
+      await cargar();
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Error al crear');
+    } finally {
+      setLoading(false);
     }
   }
 
-  function startEdit(row: Parada) {
-    setEditId(row.Id);
-    setNombre(row.Nombre || '');
-    setEstatus(Boolean(row.Estatus));
-  }
-
-  function cancelEdit() {
-    setEditId(null);
-    setNombre('');
-    setEstatus(true);
+  function startEdit(r: ParadaRow) {
+    setEditId(r.Id);
+    setNombre(r.Nombre || '');
+    setDescripcion(r.Descripcion || '');
+    setUbicacion(r.Ubicacion || '');
+    setEstatus(Boolean(r.Estatus));
+    setIdSede(r.IdSede ?? '');
   }
 
   async function handleUpdate() {
     if (editId == null) return;
+    const sedeNum = typeof idSede === 'number' ? idSede : Number(idSede || 0);
+    if (!sedeNum) return setErrorMsg('Debes seleccionar una sede.');
+    setLoading(true);
+    setErrorMsg(null);
     try {
-      setErrorMsg(null);
-      await api.updateParada(editId, { Nombre: nombre, Estatus: estatus });
-      cancelEdit();
-      await load();
-    } catch (err: any) {
-      setErrorMsg(err?.message || 'Error al actualizar');
+      await api.updateParadaWeb(editId, {
+        nombre: nombre.trim(),
+        descripcion: descripcion.trim() || null,
+        ubicacion: ubicacion.trim() || null,
+        estatus,
+        idsede: sedeNum,
+      });
+      limpiarForm();
+      await cargar();
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Error al actualizar');
+    } finally {
+      setLoading(false);
     }
   }
 
   async function handleDeleteOne(id: number) {
+    if (!confirm('¿Eliminar esta parada?')) return;
+    setLoading(true);
+    setErrorMsg(null);
     try {
-      setErrorMsg(null);
-      await api.deleteParada(id); // <--- eliminar por Id
-      await load();
-    } catch (err: any) {
-      setErrorMsg(err?.message || 'Error al eliminar');
+      await api.deleteParadaWeb(id);
+      await cargar();
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Error al eliminar');
+    } finally {
+      setLoading(false);
     }
   }
 
+  const nombreSede = (id?: number | null) => {
+    if (!id) return '-';
+    const f = sedes.find((s) => Number(s.Id) === Number(id));
+    return f?.Nombre ?? `Sede ${id}`;
+  };
+
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Solicitudes de transporte (Paradas)</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Solicitudes de transporte (Paradas)</h1>
+        <button
+          onClick={cargar}
+          className="rounded-md bg-gray-700/40 px-4 py-2 text-gray-100 hover:bg-gray-600"
+          disabled={loading}
+        >
+          {loading ? 'Actualizando…' : 'Refrescar'}
+        </button>
+      </div>
 
       {errorMsg && (
         <div className="rounded-md bg-red-900/30 border border-red-500 px-4 py-2 text-sm">
@@ -99,7 +180,7 @@ export default function SolicitudesTransportePage() {
         </div>
       )}
 
-      {/* Buscar */}
+      {/* Buscar (cliente) */}
       <div className="flex gap-2">
         <input
           className="px-3 py-2 rounded-md bg-[#1e293b] border border-[#334155] w-72"
@@ -108,16 +189,16 @@ export default function SolicitudesTransportePage() {
           onChange={(e) => setQ(e.target.value)}
         />
         <button
-          onClick={load}
-          className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={() => setQ('')}
+          className="px-4 py-2 rounded-md bg-slate-600 hover:bg-slate-700 text-white"
         >
-          Buscar
+          Limpiar
         </button>
       </div>
 
       {/* Form crear / editar */}
       <div className="rounded-lg border border-[#1e293b] p-4 space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <div className="flex flex-col gap-1">
             <label className="text-sm text-slate-300">Nombre</label>
             <input
@@ -128,40 +209,72 @@ export default function SolicitudesTransportePage() {
             />
           </div>
 
-          <div className="flex items-end gap-2">
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={estatus}
-                onChange={(e) => setEstatus(e.target.checked)}
-              />
-              Activa
-            </label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-slate-300">Descripción</label>
+            <input
+              className="px-3 py-2 rounded-md bg-[#1e293b] border border-[#334155]"
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              placeholder="Descripción"
+            />
           </div>
 
-          <div className="flex items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-slate-300">Ubicación</label>
+            <input
+              className="px-3 py-2 rounded-md bg-[#1e293b] border border-[#334155]"
+              value={ubicacion}
+              onChange={(e) => setUbicacion(e.target.value)}
+              placeholder="Dirección o referencia"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-slate-300">Sede</label>
+            <select
+              className="rounded-md border border-[#334155] bg-[#1e293b] px-3 py-2 text-gray-100"
+              value={idSede}
+              onChange={(e) => setIdSede(e.target.value ? Number(e.target.value) : '')}
+            >
+              <option value="">Selecciona sede</option>
+              {sedes.map((s) => (
+                <option key={String(s.Id)} value={String(s.Id)}>
+                  {s.Nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-end gap-4">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={estatus} onChange={(e) => setEstatus(e.target.checked)} />
+              Activa
+            </label>
+
             {editId == null ? (
               <button
                 onClick={handleCreate}
                 className="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white"
+                disabled={loading}
               >
                 Crear
               </button>
             ) : (
-              <div className="flex gap-2">
+              <>
                 <button
                   onClick={handleUpdate}
                   className="px-4 py-2 rounded-md bg-amber-600 hover:bg-amber-700 text-white"
+                  disabled={loading}
                 >
                   Guardar
                 </button>
                 <button
-                  onClick={cancelEdit}
+                  onClick={limpiarForm}
                   className="px-4 py-2 rounded-md bg-slate-600 hover:bg-slate-700 text-white"
                 >
                   Cancelar
                 </button>
-              </div>
+              </>
             )}
           </div>
         </div>
@@ -174,6 +287,8 @@ export default function SolicitudesTransportePage() {
             <tr>
               <th className="px-4 py-3">Id</th>
               <th className="px-4 py-3">Nombre</th>
+              <th className="px-4 py-3">Sede</th>
+              <th className="px-4 py-3">Ubicación</th>
               <th className="px-4 py-3">Estado</th>
               <th className="px-4 py-3">Acciones</th>
             </tr>
@@ -181,24 +296,20 @@ export default function SolicitudesTransportePage() {
           <tbody>
             {loading ? (
               <tr>
-                <td className="px-4 py-4" colSpan={4}>
-                  Cargando…
-                </td>
+                <td colSpan={6} className="px-4 py-4">Cargando…</td>
               </tr>
-            ) : rows.length === 0 ? (
+            ) : filas.length === 0 ? (
               <tr>
-                <td className="px-4 py-4" colSpan={4}>
-                  Sin resultados.
-                </td>
+                <td colSpan={6} className="px-4 py-4">Sin resultados.</td>
               </tr>
             ) : (
-              rows.map((r) => (
+              filas.map((r) => (
                 <tr key={r.Id} className="border-t border-[#1e293b]">
                   <td className="px-4 py-3">{r.Id}</td>
                   <td className="px-4 py-3">{r.Nombre}</td>
-                  <td className="px-4 py-3">
-                    {r.Estatus ? 'Activa' : 'Inactiva'}
-                  </td>
+                  <td className="px-4 py-3">{nombreSede(r.IdSede ?? null)}</td>
+                  <td className="px-4 py-3">{r.Ubicacion || '-'}</td>
+                  <td className="px-4 py-3">{r.Estatus ? 'Activa' : 'Inactiva'}</td>
                   <td className="px-4 py-3 flex gap-2">
                     <button
                       onClick={() => startEdit(r)}
@@ -209,6 +320,7 @@ export default function SolicitudesTransportePage() {
                     <button
                       onClick={() => handleDeleteOne(r.Id)}
                       className="px-3 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white"
+                      disabled={loading}
                     >
                       Eliminar
                     </button>
