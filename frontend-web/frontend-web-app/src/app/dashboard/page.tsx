@@ -1,130 +1,142 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api, type DashboardWeb } from "@/lib/api";
-
-function fmt(n: number | undefined) {
-  if (typeof n !== "number" || Number.isNaN(n)) return "0";
-  return new Intl.NumberFormat("es-MX").format(n);
-}
+import { useEffect, useMemo, useState } from "react";
+import { api, type Reserva } from "@/lib/api";
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardWeb | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [reservas, setReservas] = useState<Reserva[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  async function load() {
+  const [buscarId, setBuscarId] = useState<string>("");
+  const [detalle, setDetalle] = useState<Reserva | null>(null);
+  const [loadingDetalle, setLoadingDetalle] = useState<boolean>(false);
+  const [errorDetalle, setErrorDetalle] = useState<string | null>(null);
+
+  async function cargarReservas() {
     setLoading(true);
-    setErr(null);
+    setError(null);
     try {
-      // Sin filtro de fecha
-      const resp = await api.getDashboard();
-      if (resp?.success) {
-        setData(resp.data);
-      } else {
-        setData(null);
-        setErr(resp?.message || "No se pudo obtener el dashboard");
-      }
+      const data = await api.getReservas();
+      setReservas(Array.isArray(data) ? data : []);
     } catch (e: any) {
-      setData(null);
-      setErr(e?.message || "No se pudo obtener el dashboard");
+      setError(e?.message || "Error al cargar reservas");
     } finally {
       setLoading(false);
     }
   }
 
+  async function buscarReserva() {
+    setDetalle(null);
+    setErrorDetalle(null);
+    if (!buscarId.trim()) return;
+    setLoadingDetalle(true);
+    try {
+      const r = await api.getReserva(buscarId.trim());
+      setDetalle(r || null);
+    } catch (e: any) {
+      setErrorDetalle(e?.message || "No se pudo obtener la reserva");
+    } finally {
+      setLoadingDetalle(false);
+    }
+  }
+
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    cargarReservas();
   }, []);
 
+  const total = useMemo(() => reservas.length, [reservas]);
+
   return (
-    <main className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="h-10 rounded-md bg-indigo-600 px-4 text-white disabled:opacity-50"
-        >
-          {loading ? "Actualizando…" : "Actualizar"}
-        </button>
-      </div>
+    <main style={{ padding: 16, display: "grid", gap: 16 }}>
+      <h1 style={{ margin: 0 }}>Dashboard</h1>
 
-      {err && (
-        <div className="rounded-md border border-red-600 bg-red-900/30 px-4 py-2 text-red-200">
-          {err}
+      {/* Buscador por IdTransaccion */}
+      <section style={{ display: "grid", gap: 8 }}>
+        <h2 style={{ margin: 0 }}>Buscar reserva por IdTransaccion</h2>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            placeholder="IdTransaccion"
+            value={buscarId}
+            onChange={(e) => setBuscarId(e.target.value)}
+            style={{ flex: 1, padding: 8 }}
+          />
+          <button onClick={buscarReserva} disabled={loadingDetalle || !buscarId.trim()}>
+            {loadingDetalle ? "Buscando…" : "Buscar"}
+          </button>
         </div>
-      )}
-
-      {/* Tarjetas resumen */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card title="Total reservas" value={fmt(data?.totalReservas)} />
-        <Card title="Servicios activos" value={fmt(data?.serviciosActivos)} />
-        <Card title="Sedes activas" value={fmt(data?.sedesActivas)} />
+        {errorDetalle && <p style={{ color: "crimson" }}>Error: {errorDetalle}</p>}
+        {detalle && (
+          <div style={{ border: "1px solid #333", borderRadius: 8, padding: 12 }}>
+            <h3 style={{ marginTop: 0 }}>Detalle</h3>
+            <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+{JSON.stringify(detalle, null, 2)}
+            </pre>
+          </div>
+        )}
       </section>
 
-      {/* Tabla por sede */}
-      <section>
-        <h2 className="text-lg font-medium mb-3">Ocupación por sede</h2>
-        <div className="rounded-xl border border-slate-700 overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-800/50 border-b border-slate-700">
-              <tr>
-                <Th>Sede</Th>
-                <Th>Ciudad</Th>
-                <Th className="text-right">Reservas</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {!data?.resumenPorSede?.length ? (
-                <tr>
-                  <td colSpan={3} className="p-4 text-slate-400">
-                    {loading ? "Cargando…" : "Sin datos."}
-                  </td>
-                </tr>
-              ) : (
-                data.resumenPorSede.map((s) => (
-                  <tr key={String(s.sedeid)} className="border-b border-slate-800">
-                    <Td>{s.sede}</Td>
-                    <Td>{s.ciudad}</Td>
-                    <Td className="text-right">{fmt(s.reservas)}</Td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* Lista de reservas */}
+      <section style={{ display: "grid", gap: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <h2 style={{ margin: 0 }}>Reservas</h2>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={cargarReservas} disabled={loading}>
+              {loading ? "Actualizando…" : "Actualizar"}
+            </button>
+            <span style={{ opacity: 0.8 }}>Total: {total}</span>
+          </div>
         </div>
+
+        {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
+        {loading && !reservas.length && <p>Cargando reservas…</p>}
+        {!loading && !error && !reservas.length && <p>No hay reservas.</p>}
+
+        {!loading && !error && !!reservas.length && (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                minWidth: 600,
+                border: "1px solid #333",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th style={th}>IdTransaccion</th>
+                  <th style={th}>Estado</th>
+                  <th style={th}>Fecha</th>
+                  <th style={th}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reservas.map((r, i) => (
+                  <tr key={`${r.IdTransaccion || i}`} style={{ borderTop: "1px solid #333" }}>
+                    <td style={td}>{r.IdTransaccion ?? ""}</td>
+                    <td style={td}>{(r as any).Estado ?? ""}</td>
+                    <td style={td}>{(r as any).Fecha ?? ""}</td>
+                    <td style={td}>
+                      <button
+                        onClick={() => {
+                          setBuscarId(String(r.IdTransaccion || ""));
+                          // Opcional: disparar búsqueda inmediata
+                          // buscarReserva();
+                        }}
+                      >
+                        Ver detalle
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </main>
   );
 }
 
-function Card({ title, value }: { title: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border border-slate-700 p-4">
-      <div className="text-slate-400 text-sm">{title}</div>
-      <div className="text-3xl mt-2">{value}</div>
-    </div>
-  );
-}
-
-function Th({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <th className={`p-3 text-left ${className}`.trim()}>{children}</th>;
-}
-
-function Td({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <td className={`p-3 ${className}`.trim()}>{children}</td>;
-}
+const th: React.CSSProperties = { textAlign: "left", padding: 8, borderBottom: "1px solid #333" };
+const td: React.CSSProperties = { padding: 8, verticalAlign: "top" };
