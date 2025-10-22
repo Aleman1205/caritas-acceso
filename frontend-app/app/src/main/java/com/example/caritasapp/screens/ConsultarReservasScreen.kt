@@ -14,11 +14,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.caritasapp.navigation.Screen
-import com.example.caritasapp.network.ApiService
-import com.example.caritasapp.network.RetrofitClient
 import com.example.caritasapp.ui.theme.*
 import com.example.caritasapp.viewmodel.CaritasViewModel
 import kotlinx.coroutines.launch
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 
 data class ReservaDetalle(
   val clave: String,
@@ -28,6 +32,25 @@ data class ReservaDetalle(
   val hombres: Int,
   val mujeres: Int
 )
+
+// ✅ QR Generator
+fun generateQrCode(content: String): Bitmap? {
+  return try {
+    val writer = QRCodeWriter()
+    val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, 512, 512)
+    val width = bitMatrix.width
+    val height = bitMatrix.height
+    val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+    for (x in 0 until width) {
+      for (y in 0 until height) {
+        bmp.setPixel(x, y, if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+      }
+    }
+    bmp
+  } catch (e: Exception) {
+    null
+  }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +64,6 @@ fun ConsultarReservasScreen(navController: NavHostController, viewModel: Caritas
 
   val hasActiveReservation = viewModel.hasActiveReservation.value
 
-  // 🔁 Load stored reservation info (no backend call needed)
   LaunchedEffect(Unit) {
     scope.launch {
       try {
@@ -111,6 +133,18 @@ fun ConsultarReservasScreen(navController: NavHostController, viewModel: Caritas
             )
 
             reserva?.let {
+              // 🟩 Show QR Code above the card
+              val qrBitmap = remember { generateQrCode(it.clave) }
+              qrBitmap?.let { bmp ->
+                Image(
+                  bitmap = bmp.asImageBitmap(),
+                  contentDescription = "QR Code",
+                  modifier = Modifier
+                    .size(180.dp)
+                    .padding(bottom = 16.dp)
+                )
+              }
+
               ReservaCard(it)
             }
 
@@ -119,7 +153,6 @@ fun ConsultarReservasScreen(navController: NavHostController, viewModel: Caritas
             Button(
               onClick = {
                 scope.launch {
-                  // 🔄 Reset all reservation data
                   viewModel.hasActiveReservation.value = false
                   viewModel.selectedSedeName.value = null
                   viewModel.selectedSedeId.value = null
@@ -127,7 +160,6 @@ fun ConsultarReservasScreen(navController: NavHostController, viewModel: Caritas
 
                   snackbarHostState.showSnackbar("Reserva finalizada correctamente ✅")
 
-                  // Small delay before returning to home
                   kotlinx.coroutines.delay(1200)
                   navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Home.route) { inclusive = true }

@@ -18,4 +18,8 @@ interface ApiService {
     @Path("telefono") telefono: String
   ): Response<ReservasResponse>
 
+  @GET("movil/sedes/{id}/servicios")
+  suspend fun getServiciosPorSede(
+    @Path("id") id: Int
+  ): ServiciosResponse
 }
