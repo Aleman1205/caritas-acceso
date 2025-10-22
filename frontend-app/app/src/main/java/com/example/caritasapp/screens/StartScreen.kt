@@ -207,6 +207,15 @@ fun StartScreen(navController: NavHostController, viewModel: CaritasViewModel) {
                     ) {
                       Divider(color = CaritasBlueTeal.copy(alpha = 0.2f))
 
+                      // ✅ Hardcoded Google Maps links for each sede
+                      val mapsUrl = when (sede.id) {
+                        1 -> "https://maps.app.goo.gl/w57kTJAMnULSx6oRA?g_st=ipc"
+                        2 -> "https://maps.app.goo.gl/hNU4aY6Jfo5EDmzR6?g_st=ipc"
+                        3 -> "https://maps.app.goo.gl/v3vpKYeMJWWcxM9y6?g_st=ipc"
+                        4 -> "https://maps.app.goo.gl/491JYAXPMJifmjWC8?g_st=ipc"
+                        else -> "https://maps.google.com"
+                      }
+
                       Text(
                         text = "Ver en Google Maps",
                         color = CaritasBlueTeal,
@@ -215,7 +224,7 @@ fun StartScreen(navController: NavHostController, viewModel: CaritasViewModel) {
                         modifier = Modifier
                           .padding(top = 6.dp)
                           .clickable {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${sede.nombre}"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mapsUrl))
                             context.startActivity(intent)
                           }
                       )
@@ -257,8 +266,7 @@ fun StartScreen(navController: NavHostController, viewModel: CaritasViewModel) {
                         )
                       }
 
-                      // 🟨 Promedio de rating
-                      var promedio by remember { mutableStateOf<Double?>(null) }
+                  var promedio by remember { mutableStateOf<Double?>(null) }
                       var totalReviews by remember { mutableStateOf<Int?>(null) }
 
                       LaunchedEffect(sede.id) {
@@ -268,19 +276,8 @@ fun StartScreen(navController: NavHostController, viewModel: CaritasViewModel) {
                         }
                       }
 
-// 🟩 Mostrar servicios
-                      sede.servicios.forEach { servicio ->
-                        Text(
-                          text = "• ${servicio.nombre}",
-                          color = CaritasNavy,
-                          fontSize = 15.sp,
-                          modifier = Modifier.padding(start = 8.dp, top = 2.dp)
-                        )
-                      }
-
                       Spacer(modifier = Modifier.height(8.dp))
 
-// ⭐ Mostrar rating si existe
                       if (promedio != null && totalReviews != null) {
                         Row(
                           verticalAlignment = Alignment.CenterVertically,
