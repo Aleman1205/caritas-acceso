@@ -40,9 +40,9 @@ export async function createSedeServicioController(req, res) {
       precio,
       horainicio,
       horafinal,
-      estatus,
-      idsede,
-      idservicio,
+      estatus: Estatus, // mapeamos mayúscula -> minúscula
+      idsede: IdSede,
+      idservicio: IdServicio,
     });
 
     return res.status(201).json({

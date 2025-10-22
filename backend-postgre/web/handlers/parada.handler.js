@@ -13,13 +13,14 @@ export async function createParadaDB({ nombre, descripcion, ubicacion, estatus, 
 }
 
 /** Obtiene una parada por su nombre */
+/** Obtiene paradas por nombre (puede devolver múltiples coincidencias) */
 export async function getParadaByNombreDB(nombre) {
   const query = `
     select * from parada
-    where lower(nombre) = lower($1)
-    limit 1;
+    where lower(nombre) like lower($1);
   `;
-  const values = [nombre];
+  const values = [`%${nombre}%`]; // permite coincidencias parciales
   const { rows } = await pool.query(query, values);
-  return rows[0] || null;
+  return rows; // <-- DEVOLVEMOS UN ARRAY, aunque sea vacío
 }
+

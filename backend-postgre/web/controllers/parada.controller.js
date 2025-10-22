@@ -43,31 +43,26 @@ export async function getParadaByNombreController(req, res) {
       return res.status(400).json({
         success: false,
         message: "El parámetro 'nombre' es obligatorio.",
-        data: null,
+        data: [],
       });
     }
 
-    const parada = await getParadaByNombreDB(nombre);
-
-    if (!parada) {
-      return res.status(404).json({
-        success: false,
-        message: `No se encontró una parada con nombre '${nombre}'.`,
-        data: null,
-      });
-    }
+    const paradas = await getParadaByNombreDB(nombre);
 
     return res.status(200).json({
       success: true,
-      message: "Parada obtenida correctamente.",
-      data: parada,
+      message: paradas.length
+        ? "Paradas obtenidas correctamente."
+        : `No se encontraron paradas con nombre '${nombre}'.`,
+      data: paradas, // <-- ARRAY de objetos
     });
   } catch (err) {
     console.error("Error fetching parada:", err);
     return res.status(500).json({
       success: false,
       message: "Error interno del servidor.",
-      data: null,
+      data: [],
     });
   }
 }
+
