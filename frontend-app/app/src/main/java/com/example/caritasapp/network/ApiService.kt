@@ -22,4 +22,9 @@ interface ApiService {
   suspend fun getServiciosPorSede(
     @Path("id") id: Int
   ): ServiciosResponse
+
+  @POST("movil/transporte")
+  suspend fun solicitarTransporte(
+    @Body request: TransporteRequest
+  ): Response<Unit>
 }

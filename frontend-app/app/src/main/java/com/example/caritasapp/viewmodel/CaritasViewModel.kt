@@ -3,9 +3,11 @@ package com.example.caritasapp.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.caritasapp.network.ApiService
 import com.example.caritasapp.network.RetrofitClient
 import com.example.caritasapp.network.ServicioItem
+import com.example.caritasapp.network.TransporteRequest
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -60,6 +62,23 @@ class CaritasViewModel : ViewModel() {
         errorServicios.value = "Error inesperado: ${e.localizedMessage}"
       } finally {
         isLoadingServicios.value = false
+      }
+    }
+  }
+
+  fun solicitarTransporte(
+    request: TransporteRequest,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+  ) {
+    viewModelScope.launch {
+      try {
+        val response = apiService.solicitarTransporte(request)
+        if (response.isSuccessful) onSuccess()
+        else onError("Error al enviar la solicitud")
+      } catch (e: Exception) {
+        e.printStackTrace()
+        onError("Error de conexión con el servidor")
       }
     }
   }

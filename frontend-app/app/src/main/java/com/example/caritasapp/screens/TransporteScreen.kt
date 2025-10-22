@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.caritasapp.navigation.Screen
+import com.example.caritasapp.network.TransporteRequest
 import com.example.caritasapp.ui.theme.*
 import com.example.caritasapp.viewmodel.CaritasViewModel
 import kotlinx.coroutines.launch
@@ -25,20 +26,18 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransporteScreen(navController: NavController, viewModel: CaritasViewModel) {
-  val context = LocalContext.current
   val scope = rememberCoroutineScope()
   val snackbarHostState = remember { SnackbarHostState() }
 
-  val sedeDestino = rememberSaveable { mutableStateOf("Cáritas Monterrey - Centro") }
-  val telefonoUsuario = rememberSaveable { mutableStateOf("+52 8181234567") }
+  // 🔹 Directly use data from ViewModel
+  val sedeDestino by viewModel.selectedSedeName
+  val telefonoUsuario by viewModel.telefono
 
   var direccionRecogida by rememberSaveable { mutableStateOf("") }
+  var descripcionEntorno by rememberSaveable { mutableStateOf("") }
   var direccionError by remember { mutableStateOf(false) }
 
-  Surface(
-    modifier = Modifier.fillMaxSize(),
-    color = Color.White
-  ) {
+  Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
     Scaffold(
       containerColor = Color.White,
       snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -59,10 +58,11 @@ fun TransporteScreen(navController: NavController, viewModel: CaritasViewModel) 
           modifier = Modifier.padding(bottom = 30.dp)
         )
 
+        // --- Sede autofilled ---
         OutlinedTextField(
-          value = sedeDestino.value,
+          value = sedeDestino ?: "",
           onValueChange = {},
-          label = { Text("Destino (Sede) ") },
+          label = { Text("Destino (Sede)") },
           singleLine = true,
           enabled = false,
           modifier = Modifier
@@ -76,8 +76,9 @@ fun TransporteScreen(navController: NavController, viewModel: CaritasViewModel) 
           )
         )
 
+        // --- Teléfono autofilled ---
         OutlinedTextField(
-          value = telefonoUsuario.value,
+          value = telefonoUsuario,
           onValueChange = {},
           label = { Text("Teléfono") },
           singleLine = true,
@@ -93,6 +94,7 @@ fun TransporteScreen(navController: NavController, viewModel: CaritasViewModel) 
           )
         )
 
+        // --- Dirección de recogida ---
         OutlinedTextField(
           value = direccionRecogida,
           onValueChange = {
@@ -100,7 +102,6 @@ fun TransporteScreen(navController: NavController, viewModel: CaritasViewModel) 
             direccionError = it.isBlank()
           },
           label = { Text("Dirección de recogida") },
-          singleLine = false,
           isError = direccionError,
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
           modifier = Modifier
@@ -113,6 +114,24 @@ fun TransporteScreen(navController: NavController, viewModel: CaritasViewModel) 
             unfocusedBorderColor = CaritasBlueTeal.copy(alpha = 0.5f),
             cursorColor = CaritasBlueTeal,
             errorBorderColor = Color.Red
+          )
+        )
+
+        // --- Descripción del entorno ---
+        OutlinedTextField(
+          value = descripcionEntorno,
+          onValueChange = { descripcionEntorno = it },
+          label = { Text("Descripción del entorno") },
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .padding(vertical = 8.dp),
+          shape = RoundedCornerShape(16.dp),
+          colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = CaritasBlueTeal,
+            unfocusedBorderColor = CaritasBlueTeal.copy(alpha = 0.5f),
+            cursorColor = CaritasBlueTeal
           )
         )
 
@@ -131,10 +150,24 @@ fun TransporteScreen(navController: NavController, viewModel: CaritasViewModel) 
           onClick = {
             direccionError = direccionRecogida.isBlank()
             if (!direccionError) {
-              scope.launch {
-                snackbarHostState.showSnackbar("Solicitud de transporte enviada correctamente")
-              }
-              navController.popBackStack(Screen.Home.route, false)
+              val request = TransporteRequest(
+                telefono = telefonoUsuario,
+                direccion = direccionRecogida,
+                descripcion = descripcionEntorno
+              )
+
+              viewModel.solicitarTransporte(
+                request,
+                onSuccess = {
+                  scope.launch {
+                    snackbarHostState.showSnackbar("Solicitud de transporte enviada correctamente")
+                  }
+                  navController.popBackStack(Screen.Home.route, false)
+                },
+                onError = { msg ->
+                  scope.launch { snackbarHostState.showSnackbar(msg) }
+                }
+              )
             }
           },
           colors = ButtonDefaults.buttonColors(containerColor = CaritasBlueTeal),
@@ -154,3 +187,4 @@ fun TransporteScreen(navController: NavController, viewModel: CaritasViewModel) 
     }
   }
 }
+
