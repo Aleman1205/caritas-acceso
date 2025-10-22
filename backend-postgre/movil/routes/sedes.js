@@ -1,6 +1,7 @@
 import express from "express";
+import { listarSedes, listarServiciosPorSede } from "../controllers/sedesController.js";
+
 export const router = express.Router();
 
-router.get("/", (req, res) => {
-    res.send("Sedes route working");
-});
+router.get("/", listarSedes);
+router.get("/:id/servicios", listarServiciosPorSede);
