@@ -18,7 +18,7 @@ const navItems = [
   { href: "/reservas", label: "Reservas", icon: CalendarDays },
   { href: "/cupos", label: "Cupos y Horarios", icon: CalendarClock },
   { href: "/transporte/solicitudes", label: "Transporte", icon: Bus },
-  { href: "/notificaciones", label: "Calificacion", icon: Star },
+  { href: "/notificaciones", label: "Reseñas", icon: Star },
   { href: "/sedes", label: "Sedes y Servicios", icon: Hotel },
   { href: "/servicios", label: "Servicios", icon: Hotel },
 ];

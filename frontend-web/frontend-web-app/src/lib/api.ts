@@ -108,6 +108,16 @@ export type ReservaTelefono = {
   beneficiario?: string | null;
 };
 
+// ===== Tipos Reseñas (web/resenas) =====
+export type ResenaWeb = {
+  id: number;
+  estrellas: number;   // mapea a int_estrellas
+  comentario: string;  // mapea a comentarios
+  idSede?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 type ApiResponse<T> = { success: boolean; message: string; data: T };
 
 // ===== Tipos Cupos (web/cupos) =====
@@ -247,15 +257,22 @@ export const api = {
   getReservasAll: async () =>
     http<ApiResponse<ReservaTelefono[]>>(`/web/reservas`),
 
-  // NUEVO: listar las reservas movidas a 'reservafin'
+  // listar las reservas movidas a 'reservafin'
   getReservasFin: async () =>
     http<ApiResponse<ReservaTelefono[]>>(`/web/reservas/fin`),
 
-  // NUEVO: mover a 'reservafin' + eliminar desde /web (DELETE)
+  // mover a 'reservafin' + eliminar desde /web (DELETE)
   deleteReservaWeb: async (idTransaccion: string) =>
     http<ApiResponse<[]>>(`/web/reservas/${encodeURIComponent(idTransaccion)}`, {
       method: "DELETE",
     }),
+
+  // -------- Reseñas (web) --------
+  // GET /web/resenas  (opcional ?idSede=)
+  getResenasWeb: (params?: { idSede?: number }) =>
+    http<ApiResponse<ResenaWeb[]>>(
+      `/web/resenas${params?.idSede ? `?idSede=${encodeURIComponent(params.idSede)}` : ""}`
+    ),
 
   // -------- Compras --------
   createCompra: (b: Partial<Compra>) =>

@@ -101,15 +101,13 @@ router.get("/fin", async (_req, res) => {
       FROM reservafin rf
       LEFT JOIN sede s           ON rf.idsede = s.id
       LEFT JOIN beneficiario b   ON rf.idbeneficiario = b.id
-      ORDER BY rf.fechainicio DESC NULLS LAST;
+      ORDER BY rf.fechainicio DESC NULLS LAST, rf.fechasalida DESC NULLS LAST;
       `
     );
 
     const data = (rows || []).map((r) => {
-      // Si en el futuro agregas columna "estado" en reservafin, úsala aquí.
       const status = r.fechasalida ? "finalizada" : "cancelada";
       const beneficiario = [r.ben_nombre, r.ben_apellido].filter(Boolean).join(" ").trim();
-
       return {
         idTransaccion: r.idtransaccion,
         clave: r.idtransaccion?.slice(0, 12) ?? "",
@@ -196,8 +194,16 @@ router.get("/:telefono", async (req, res) => {
 });
 
 /* ====== DELETE /web/reservas/:idTransaccion  (mueve a reservafin y elimina) ====== */
+/**
+ * Comportamiento de fechasalida:
+ *  - Si la reserva original YA tiene fechasalida, se usa esa.
+ *  - Si NO tiene, se inserta la fecha/hora ACTUAL.
+ *  - Si agregas ?setSalida=now en la querystring, SIEMPRE se usará la fecha/hora actual.
+ */
 router.delete("/:idTransaccion", async (req, res) => {
   const idTransaccion = String(req.params.idTransaccion || "").trim();
+  const forceNow = String(req.query.setSalida || "") === "now";
+
   if (!idTransaccion) {
     return res.status(400).json({
       success: false,
@@ -240,6 +246,9 @@ router.delete("/:idTransaccion", async (req, res) => {
 
     const r = rows[0];
 
+    // Determinar fechasalida a insertar
+    const fechaSalidaToInsert = forceNow ? new Date() : (r.fechasalida ?? new Date());
+
     // 2) Insertar en reservafin (variables locales -> insert)
     await client.query(
       `
@@ -252,7 +261,7 @@ router.delete("/:idTransaccion", async (req, res) => {
       [
         r.idtransaccion,
         r.fechainicio,
-        r.fechasalida,
+        fechaSalidaToInsert,   // <- aquí va la fecha actual si venía null o si se forzó
         r.horacheckin,
         r.hombres,
         r.mujeres,
