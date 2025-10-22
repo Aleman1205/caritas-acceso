@@ -1,7 +1,7 @@
 // src/lib/api.ts
 
 // ===== Base URL (usa NEXT_PUBLIC_API_URL; si no, fallback a backend local 3001) =====
-const RAW_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001").trim();
+const RAW_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").trim();
 // sin slash final
 const BASE_URL = RAW_BASE.replace(/\/+$/, "");
 
