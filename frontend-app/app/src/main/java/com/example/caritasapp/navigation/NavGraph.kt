@@ -20,11 +20,16 @@ sealed class Screen(val route: String) {
   object ConsultarServicios : Screen("consultar_servicios")
 }
 
+// CAMBIO 1: agregar el parámetro startDestination en la función
 @Composable
-fun AppNavGraph(navController: NavHostController) {
+fun AppNavGraph(
+  navController: NavHostController,
+  startDestination: String //  agregado
+) {
+  // CAMBIO 2: usar el startDestination que viene del MainActivity
   NavHost(
     navController = navController,
-    startDestination = Screen.Splash.route
+    startDestination = startDestination // <-- eemplaza Screen.Splash.route
   ) {
     composable(Screen.Splash.route) { SplashScreen(navController) }
     composable(Screen.Terms.route) { TermsScreen(navController) }
