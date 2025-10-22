@@ -1,354 +1,458 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
-/** Tipos **/
-type Cupo = {
-  id: string;
-  servicioId: string;
-  fecha: string;    // YYYY-MM-DD
-  hora: string;     // HH:mm
-  capacidad: number;
-  ocupados: number;
-  activo: boolean;
+type CupoHorario = {
+  id: number;
+  sede: string;
+  servicio: string;
+  descripcion?: string | null;
+  capacidad: number | null;                 // normalizado
+  precio: number;                           // normalizado
+  horainicio: string | null;                // "HH:MM:SS" | null
+  horafinal: string | null;                 // "HH:MM:SS" | null
+  estatus: string | number | boolean | null;
 };
 
-type Servicio = {
-  id: string;
-  nombre: string;
-  descripcion?: string;
-  activo: boolean;
-};
+/* ==================== Helpers de formato/normalización ==================== */
+function fmtEntero(n: unknown) {
+  const num =
+    typeof n === "number" ? n :
+    typeof n === "string" ? parseInt(n, 10) :
+    0;
+  if (Number.isNaN(num)) return "0";
+  return new Intl.NumberFormat("es-MX").format(num);
+}
+function fmtMoney(n: number | string | null | undefined) {
+  const num =
+    typeof n === "string" ? Number(n) :
+    typeof n === "number" ? n : 0;
+  if (Number.isNaN(num)) return "0.00";
+  return num.toFixed(2);
+}
+function fmtHora(h: string | null | undefined) {
+  if (!h) return "—";
+  return h;
+}
 
-/** MOCK fallback (solo Alimentación y Lavandería) **/
-const MOCK_SERVICIOS: Servicio[] = [
-  { id: "s-01", nombre: "Alimentación", descripcion: "Comidas", activo: true },
-  { id: "s-03", nombre: "Lavandería",   descripcion: "Lavado y secado", activo: true },
-];
+/** Texto libre -> "activo" | "inactivo" | "" (para mostrar en badge) */
+function normalizeStatusText(v: unknown): "activo" | "inactivo" | "" {
+  if (v === null || v === undefined) return "";
+  if (v === true) return "activo";
+  if (v === false) return "inactivo";
+  if (typeof v === "number") return v === 1 ? "activo" : v === 0 ? "inactivo" : "";
+  if (typeof v === "string") {
+    const s = v.trim().toLowerCase();
+    if (s === "1" || s === "activo") return "activo";
+    if (s === "0" || s === "inactivo") return "inactivo";
+    return s === "" ? "" : (s as "activo" | "inactivo" | "");
+  }
+  return "";
+}
 
-const MOCK_CUPOS: Cupo[] = [
-  { id: "c-01", servicioId: "s-01", fecha: "2025-10-12", hora: "08:00", capacidad: 30, ocupados: 12, activo: true },
-  { id: "c-02", servicioId: "s-01", fecha: "2025-10-12", hora: "13:00", capacidad: 30, ocupados: 18, activo: true },
-  { id: "c-04", servicioId: "s-03", fecha: "2025-10-13", hora: "10:00", capacidad: 8,  ocupados: 3,  activo: true },
-];
+/** "HH:MM" o "HH:MM:SS" -> "HH:MM:SS" | null */
+function toHHMMSS(v: string | null | undefined): string | null {
+  if (!v) return null;
+  const s = v.trim();
+  if (/^\d{2}:\d{2}$/.test(s)) return `${s}:00`;
+  if (/^\d{2}:\d{2}:\d{2}$/.test(s)) return s;
+  return s;
+}
 
-/** PAGE **/
-export default function Page() {
-  const [servicios, setServicios] = useState<Servicio[]>([]);
-  const [data, setData] = useState<Cupo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState("");
+/** Normalizadores para la carga */
+function toInt(v: any): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = typeof v === "string" ? parseInt(v, 10) : Number(v);
+  return Number.isNaN(n) ? null : n;
+}
+function toNum(v: any): number {
+  const n = typeof v === "string" ? Number(v) : Number(v ?? 0);
+  return Number.isNaN(n) ? 0 : n;
+}
+function toHHMMSSOrNull(v: any): string | null {
+  if (v === null || v === undefined || v === "") return null;
+  const s = String(v);
+  return toHHMMSS(s);
+}
 
-  // UI
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 8;
+/* ==================== Componente ==================== */
+export default function CuposPage() {
+  const [rows, setRows] = useState<CupoHorario[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
-  // Form
-  const [form, setForm] = useState<Partial<Cupo>>({
-    servicioId: "",
-    fecha: "",
-    hora: "",
-    capacidad: 0,
-    ocupados: 0,
-    activo: true,
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [busyRow, setBusyRow] = useState<Record<string, boolean>>({});
+  // Modal de edición
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formErr, setFormErr] = useState<string | null>(null);
+  const [current, setCurrent] = useState<CupoHorario | null>(null);
+
+  // Form state
+  const [capacidad, setCapacidad] = useState<string>("");
+  const [precio, setPrecio] = useState<string>("");
+  const [horainicio, setHorainicio] = useState<string>("");
+  const [horafinal, setHorafinal] = useState<string>("");
+  const [estatusBool, setEstatusBool] = useState<boolean | null>(null);
+  const [descripcion, setDescripcion] = useState<string>("");
+
+  async function load() {
+    setLoading(true);
+    setErr(null);
+    try {
+      const resp = await api.getCupos();
+      if (resp?.success && Array.isArray(resp.data)) {
+        const normalized: CupoHorario[] = resp.data.map((r: any) => ({
+          id: Number(r.id),
+          sede: String(r.sede ?? ""),
+          servicio: String(r.servicio ?? ""),
+          descripcion: r.descripcion ?? null,
+          capacidad: toInt(r.capacidad),
+          precio: toNum(r.precio),
+          horainicio: toHHMMSSOrNull(r.horainicio),
+          horafinal: toHHMMSSOrNull(r.horafinal),
+          estatus: r.estatus,
+        }));
+        setRows(normalized);
+      } else {
+        setRows([]);
+        setErr(resp?.message || "No se pudo obtener la lista de cupos.");
+      }
+    } catch (e: any) {
+      setRows([]);
+      setErr(e?.message || "No se pudo obtener la lista de cupos.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    let alive = true;
-    async function load() {
-      setLoading(true);
-      setMsg("");
-      try {
-        const [servRes, cupRes] = await Promise.allSettled([
-          fetch("/api/servicios", { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)),
-          fetch("/api/cupos", { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)),
-        ]);
-        if (!alive) return;
-
-
-        // Si tu API aún devuelve cupos de s-02, también los filtramos:
-        const cps = (cupRes.status === "fulfilled" && Array.isArray(cupRes.value) ? cupRes.value : MOCK_CUPOS)
-          .filter((c: Cupo) => c.servicioId !== "s-02");
-
-        setServicios(srv);
-        setData(cps);
-
-        if (servRes.status !== "fulfilled" || cupRes.status !== "fulfilled") {
-          setMsg("Sin servidor: usando datos de prueba.");
-        }
-      } catch {
-        if (!alive) return;
-        setServicios(MOCK_SERVICIOS);
-        setData(MOCK_CUPOS);
-        setMsg("Sin servidor: usando datos de prueba.");
-      } finally {
-        if (alive) setLoading(false);
-      }
-    }
     load();
-    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function onChange<K extends keyof Cupo>(k: K, v: Cupo[K]) {
-    setForm(p => ({ ...p, [k]: v }));
+  function onEditar(row: CupoHorario) {
+    setCurrent(row);
+    // prellenar
+    setCapacidad(row.capacidad == null ? "" : String(row.capacidad));
+    setPrecio(String(row.precio ?? 0));
+    // inputs type="time" aceptan "HH:MM"
+    setHorainicio((row.horainicio || "").slice(0, 5));
+    setHorafinal((row.horafinal || "").slice(0, 5));
+    const st = normalizeStatusText(row.estatus);
+    setEstatusBool(st === "" ? null : st === "activo");
+    setDescripcion(row.descripcion ?? "");
+    setFormErr(null);
+    setOpen(true);
   }
 
-  function validate(f: Partial<Cupo>) {
-    const e: Record<string, string> = {};
-    if (!f.servicioId) e.servicioId = "Selecciona servicio.";
-    if (!f.fecha) e.fecha = "Elige fecha (YYYY-MM-DD).";
-    if (!f.hora) e.hora = "Elige hora (HH:mm).";
-    const cap = Number(f.capacidad ?? 0);
-    const occ = Number(f.ocupados ?? 0);
-    if (!Number.isFinite(cap) || cap < 0) e.capacidad = "Capacidad inválida.";
-    if (!Number.isFinite(occ) || occ < 0) e.ocupados = "Ocupados inválido.";
-    if (cap < occ) e.ocupados = "Ocupados no puede exceder capacidad.";
-    return e;
+  function closeModal() {
+    setOpen(false);
+    setCurrent(null);
   }
 
-  async function save() {
-    const v = validate(form);
-    setErrors(v);
-    if (Object.keys(v).length) return;
-
-    const payload: Cupo = {
-      id: (form.id as string) || `c-${uid8()}`,
-      servicioId: form.servicioId as string,
-      fecha: form.fecha as string,
-      hora: form.hora as string,
-      capacidad: Number(form.capacidad ?? 0),
-      ocupados: Number(form.ocupados ?? 0),
-      activo: !!form.activo,
-    };
-
-    const exists = data.some(c => c.id === payload.id);
-    const prev = data;
-    const next = exists ? prev.map(c => c.id === payload.id ? payload : c) : [payload, ...prev];
-    setData(next);
-
+  async function handleSave() {
+    if (!current) return;
+    setSaving(true);
+    setFormErr(null);
     try {
-      const res = await fetch(exists ? `/api/cupos/${encodeURIComponent(payload.id)}` : "/api/cupos", {
-        method: exists ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error();
-      setForm({ servicioId: "", fecha: "", hora: "", capacidad: 0, ocupados: 0, activo: true });
-    } catch {
-      setData(prev);
-      alert("No se pudo guardar el cupo. Revisa tu API.");
-    }
-  }
+      if (estatusBool === null) {
+        throw new Error("Selecciona un estatus (activo o inactivo).");
+      }
 
-  async function toggleActivo(c: Cupo) {
-    setBusyRow(m => ({ ...m, [c.id]: true }));
-    const prev = data;
-    const next = prev.map(x => x.id === c.id ? { ...x, activo: !x.activo } : x);
-    setData(next);
-    try {
-      const res = await fetch(`/api/cupos/${encodeURIComponent(c.id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activo: !c.activo }),
-      });
-      if (!res.ok) throw new Error();
-    } catch {
-      setData(prev);
-      alert("No se pudo actualizar el estado.");
+      const body: any = {
+        capacidad: capacidad.trim() === "" ? null : Number(capacidad),
+        precio: precio.trim() === "" ? 0 : Number(precio),
+        horainicio: toHHMMSS(horainicio),
+        horafinal: toHHMMSS(horafinal),
+        estatus: estatusBool,           // boolean para backend
+        descripcion: descripcion ?? "",
+      };
+
+      if (body.capacidad !== null && Number.isNaN(body.capacidad)) {
+        throw new Error("Capacidad no es un número válido.");
+      }
+      if (Number.isNaN(body.precio)) {
+        throw new Error("Precio no es un número válido.");
+      }
+
+      const resp = await api.updateCupo(current.id, body);
+      if (!resp?.success) throw new Error(resp?.message || "No se pudo guardar.");
+
+      await load();
+      setOpen(false);
+      setCurrent(null);
+    } catch (e: any) {
+      setFormErr(e?.message || "Error al guardar.");
     } finally {
-      setBusyRow(m => ({ ...m, [c.id]: false }));
+      setSaving(false);
     }
   }
-
-  async function removeCupo(id: string) {
-    if (!confirm("¿Eliminar este cupo?")) return;
-    setBusyRow(m => ({ ...m, [id]: true }));
-    const prev = data;
-    const next = prev.filter(x => x.id !== id);
-    setData(next);
-    try {
-      const res = await fetch(`/api/cupos/${encodeURIComponent(id)}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
-    } catch {
-      setData(prev);
-      alert("No se pudo eliminar.");
-    } finally {
-      setBusyRow(m => ({ ...m, [id]: false }));
-    }
-  }
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return data;
-    const mapServ = new Map(servicios.map(s => [s.id, s.nombre.toLowerCase()]));
-    return data.filter(c =>
-      [
-        c.fecha,
-        c.hora,
-        String(c.capacidad),
-        String(c.ocupados),
-        c.activo ? "activo" : "inactivo",
-        mapServ.get(c.servicioId) || "",
-      ].some(v => v.includes(q))
-    );
-  }, [data, servicios, query]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageSafe = Math.min(page, totalPages);
-  const slice = useMemo(() => {
-    const start = (pageSafe - 1) * PAGE_SIZE;
-    return filtered.slice(start, start + PAGE_SIZE);
-  }, [filtered, pageSafe]);
-
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [totalPages, page]);
 
   return (
-    <main className="mx-auto max-w-7xl p-6">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Cupos & Horarios</h1>
-        <p className="text-sm opacity-70">Administra la capacidad por servicio, fecha y hora.</p>
+    <main className="p-6 space-y-6">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Cupos y horarios</h1>
+        </div>
+        <button
+          onClick={load}
+          disabled={loading}
+          className="h-10 rounded-md bg-indigo-600 px-4 text-white disabled:opacity-50"
+        >
+          {loading ? "Cargando…" : "Recargar"}
+        </button>
       </header>
 
-      {msg && <p className="text-xs mb-3 opacity-70">{msg}</p>}
-
-      {/* Formulario */}
-      <Card className="rounded-2xl mb-6">
-        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-6 gap-4">
-          <div className="md:col-span-2">
-            <label className="block text-sm mb-1">Servicio *</label>
-            <select
-              className="w-full rounded-md border border-white/20 bg-white/5 px-3 py-2"
-              value={form.servicioId || ""}
-              onChange={e => onChange("servicioId", e.target.value as unknown as Cupo["servicioId"])}
-            >
-              <option value="">Selecciona servicio</option>
-              {servicios.filter(s => s.activo).map(s => (
-                <option key={s.id} value={s.id}>{s.nombre}</option>
-              ))}
-            </select>
-            {errors.servicioId && <p className="text-xs text-red-400 mt-1">{errors.servicioId}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1">Fecha *</label>
-            <Input type="date" value={form.fecha || ""} onChange={e => onChange("fecha", e.target.value)} />
-            {errors.fecha && <p className="text-xs text-red-400 mt-1">{errors.fecha}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1">Hora *</label>
-            <Input type="time" value={form.hora || ""} onChange={e => onChange("hora", e.target.value)} />
-            {errors.hora && <p className="text-xs text-red-400 mt-1">{errors.hora}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1">Capacidad *</label>
-            <Input type="number" value={form.capacidad ?? 0} onChange={e => onChange("capacidad", Math.max(0, Number(e.target.value)))} />
-            {errors.capacidad && <p className="text-xs text-red-400 mt-1">{errors.capacidad}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1">Ocupados</label>
-            <Input type="number" value={form.ocupados ?? 0} onChange={e => onChange("ocupados", Math.max(0, Number(e.target.value)))} />
-            {errors.ocupados && <p className="text-xs text-red-400 mt-1">{errors.ocupados}</p>}
-          </div>
-
-          <div className="flex items-end gap-2">
-            <Button onClick={save}>Guardar</Button>
-            <Button variant="ghost" onClick={() => setForm({ servicioId: "", fecha: "", hora: "", capacidad: 0, ocupados: 0, activo: true })}>
-              Limpiar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Filtro */}
-      <div className="mb-3">
-        <Input
-          placeholder="Buscar por servicio, fecha, hora, estado…"
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-          className="w-[320px]"
-        />
-      </div>
+      {err && (
+        <div className="rounded-md border border-red-600 bg-red-900/30 px-4 py-2 text-red-200">
+          {err}
+        </div>
+      )}
 
       {/* Tabla */}
-      <Card className="rounded-2xl">
-        <CardContent className="p-0 overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-white/5">
-              <tr className="text-left">
-                <th className="px-4 py-3">Servicio</th>
-                <th className="px-4 py-3">Fecha</th>
-                <th className="px-4 py-3">Hora</th>
-                <th className="px-4 py-3 text-right">Capacidad</th>
-                <th className="px-4 py-3 text-right">Ocupados</th>
-                <th className="px-4 py-3">Estado</th>
-                <th className="px-4 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td className="px-4 py-6 text-center opacity-70" colSpan={7}>Cargando…</td></tr>
-              ) : slice.length === 0 ? (
-                <tr><td className="px-4 py-6 text-center opacity-70" colSpan={7}>{msg || "Sin resultados."}</td></tr>
-              ) : (
-                slice.map((c) => {
-                  const s = servicios.find(x => x.id === c.servicioId);
-                  const busy = !!busyRow[c.id];
-                  return (
-                    <tr key={c.id} className="border-t border-white/10">
-                      <td className="px-4 py-3">{s ? s.nombre : "—"}</td>
-                      <td className="px-4 py-3">{c.fecha}</td>
-                      <td className="px-4 py-3">{c.hora}</td>
-                      <td className="px-4 py-3 text-right">{c.capacidad}</td>
-                      <td className="px-4 py-3 text-right">{c.ocupados}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block rounded-full border px-2 py-1 text-xs ${c.activo ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"}`}>
-                          {c.activo ? "Activo" : "Inactivo"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" disabled={busy} onClick={() => { setForm(c); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-                            Editar
-                          </Button>
-                          <Button variant="ghost" size="sm" disabled={busy} onClick={() => toggleActivo(c)}>
-                            {busy ? "..." : (c.activo ? "Desactivar" : "Activar")}
-                          </Button>
-                          <Button variant="ghost" size="sm" disabled={busy} onClick={() => removeCupo(c.id)}>
-                            Eliminar
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-
-      {/* Paginación */}
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-xs opacity-70">Página {pageSafe} de {totalPages} — {filtered.length} resultado(s)</span>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={pageSafe <= 1}>Anterior</Button>
-          <Button variant="ghost" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={pageSafe >= totalPages}>Siguiente</Button>
+      <section className="rounded-xl border border-slate-700 overflow-x-auto">
+        <div className="px-4 py-3 text-sm text-slate-400">
+          {rows.length} registro(s)
         </div>
-      </div>
+        <table className="min-w-[1100px] w-full text-sm">
+          <thead className="bg-slate-800/50 border-y border-slate-700">
+            <tr>
+              <Th>ID</Th>
+              <Th>Sede</Th>
+              <Th>Servicio</Th>
+              <Th>Descripción</Th>
+              <Th className="text-right">Capacidad</Th>
+              <Th className="text-right">Precio</Th>
+              <Th className="text-center">Hora inicio</Th>
+              <Th className="text-center">Hora final</Th>
+              <Th className="text-center">Estatus</Th>
+              <Th className="text-center">Acciones</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={10} className="p-4 text-slate-400">
+                  Cargando…
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="p-4 text-slate-400">
+                  Sin registros.
+                </td>
+              </tr>
+            ) : (
+              rows.map((c) => {
+                const statusText = normalizeStatusText(c.estatus);
+                return (
+                  <tr key={c.id} className="border-b border-slate-800">
+                    <Td className="text-slate-300">{c.id}</Td>
+                    <Td>{c.sede}</Td>
+                    <Td>{c.servicio}</Td>
+
+                    <Td className="whitespace-pre-line">
+                      {c.descripcion && c.descripcion.trim() !== ""
+                        ? c.descripcion
+                        : "—"}
+                    </Td>
+
+                    <Td className="text-right">{fmtEntero(c.capacidad)}</Td>
+                    <Td className="text-right">{fmtMoney(c.precio)}</Td>
+                    <Td className="text-center">{fmtHora(c.horainicio)}</Td>
+                    <Td className="text-center">{fmtHora(c.horafinal)}</Td>
+
+                    <Td className="text-center">
+                      {statusText ? (
+                        <span
+                          className={[
+                            "px-2 py-1 rounded text-xs border inline-block",
+                            statusText === "activo"
+                              ? "bg-emerald-900/40 text-emerald-200 border-emerald-700/60"
+                              : "bg-slate-700/40 text-slate-200 border-slate-600/60",
+                          ].join(" ")}
+                        >
+                          {statusText}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">—</span>
+                      )}
+                    </Td>
+
+                    <Td className="text-center">
+                      <button
+                        className="rounded-md bg-amber-600 px-3 py-1 text-white hover:bg-amber-500"
+                        onClick={() => onEditar(c)}
+                      >
+                        Editar
+                      </button>
+                    </Td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </section>
+
+      {/* Modal de edición */}
+      {open && current && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={saving ? undefined : closeModal}
+          />
+          {/* Panel */}
+          <div className="relative z-10 w-full max-w-2xl rounded-xl border border-slate-700 bg-slate-900 p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              Editar cupo #{current.id} — {current.sede} / {current.servicio}
+            </h2>
+
+            {formErr && (
+              <div className="mb-4 rounded-md border border-red-600 bg-red-900/30 px-3 py-2 text-red-200">
+                {formErr}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Capacidad">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2"
+                  value={capacidad}
+                  onChange={(e) => setCapacidad(e.target.value)}
+                  placeholder="p. ej. 50"
+                  disabled={saving}
+                />
+              </Field>
+
+              <Field label="Precio">
+                <input
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2"
+                  value={precio}
+                  onChange={(e) => setPrecio(e.target.value)}
+                  placeholder="0.00"
+                  disabled={saving}
+                />
+              </Field>
+
+              <Field label="Hora inicio">
+                <input
+                  type="time"
+                  className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2"
+                  value={horainicio}
+                  onChange={(e) => setHorainicio(e.target.value)}
+                  disabled={saving}
+                />
+              </Field>
+
+              <Field label="Hora final">
+                <input
+                  type="time"
+                  className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2"
+                  value={horafinal}
+                  onChange={(e) => setHorafinal(e.target.value)}
+                  disabled={saving}
+                />
+              </Field>
+
+              <Field label="Estatus">
+                <select
+                  className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2"
+                  value={
+                    estatusBool === null ? "" : estatusBool ? "true" : "false"
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") setEstatusBool(null);
+                    else setEstatusBool(v === "true");
+                  }}
+                  disabled={saving}
+                >
+                  <option value="">— Seleccionar —</option>
+                  <option value="true">activo</option>
+                  <option value="false">inactivo</option>
+                </select>
+              </Field>
+
+              <div className="md:col-span-2">
+                <Field label="Descripción">
+                  <textarea
+                    className="w-full rounded-md bg-slate-800 border border-slate-700 px-3 py-2 min-h-[120px]"
+                    value={descripcion}
+                    onChange={(e) => setDescripcion(e.target.value)}
+                    placeholder="Notas, horarios detallados, etc."
+                    disabled={saving}
+                  />
+                </Field>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                onClick={closeModal}
+                disabled={saving}
+                className="h-10 rounded-md border border-slate-600 px-4 text-slate-200"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="h-10 rounded-md bg-indigo-600 px-4 text-white disabled:opacity-50"
+              >
+                {saving ? "Guardando…" : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
 
-/** Utils **/
-function uid8() { return Math.random().toString(36).slice(2, 10); }
+/* ==================== UI helpers ==================== */
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <div className="mb-1 text-sm text-slate-300">{label}</div>
+      {children}
+    </label>
+  );
+}
+
+function Th({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <th className={`p-3 text-left font-medium ${className}`.trim()}>
+      {children}
+    </th>
+  );
+}
+
+function Td({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <td className={`p-3 align-top ${className}`.trim()}>{children}</td>;
+}
