@@ -1,11 +1,11 @@
 package com.example.caritasapp.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,135 +14,160 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
+import com.example.caritasapp.ui.components.CaritasScaffold
 import com.example.caritasapp.ui.theme.*
-
-data class ServicioDetalle(
-  val titulo: String,
-  val descripcion: String
-)
+import com.example.caritasapp.viewmodel.CaritasViewModel
+import com.example.caritasapp.network.ServicioItem
 
 @Composable
-fun ConsultarServiciosScreen(navController: NavController) {
-  val sede = "Cáritas Monterrey - Centro"
-  val direccion = "Av. Pino Suárez 305, Centro Monterrey, N.L."
-  val contacto = "Tel: 81 1234 5678"
-  val horario = "Todos los días, 24 horas"
+fun ConsultarServiciosScreen(
+  navController: NavController,
+  viewModel: CaritasViewModel
+) {
+  val sedeName = viewModel.selectedSedeName.value ?: "Sede sin nombre"
+  val servicios = viewModel.servicios.value
+  val isLoading = viewModel.isLoadingServicios.value
+  val error = viewModel.errorServicios.value
 
-  val servicios = listOf(
-    ServicioDetalle(
-      "Atención Médica",
-      "Doctor: Dr. Omar Caballero\nHorario: 9:00 AM - 5:00 PM"
-    ),
-    ServicioDetalle(
-      "Alimentos",
-      "Desayuno: 8:00 AM - 9:00 AM\nComida: 1:00 PM - 2:30 PM\nCena: 7:00 PM - 8:00 PM"
-    ),
-    ServicioDetalle(
-      "Lavandería",
-      "Estaciones Disponibles: 6\nHorario: 9:00 AM - 6:00 PM"
-    ),
-    ServicioDetalle(
-      "Alojamiento",
-      "Capacidad total: 50 personas\nHabitaciones: 10\nÁrea común con ventilación y agua caliente"
-    ),
-    ServicioDetalle(
-      "Transporte Solidario",
-      "Rutas disponibles: El destino que usted elija pero siempre partiendo del Sede\nPara ir al sede donde usted esté en Monterrey"
-    )
-  )
+  LaunchedEffect(Unit) {
+    viewModel.getServiciosPorSede()
+  }
 
-  Surface(
-    modifier = Modifier.fillMaxSize(),
-    color = Color.White
-  ) {
-    LazyColumn(
+  CaritasScaffold(navController) { padding ->
+    Surface(
       modifier = Modifier
         .fillMaxSize()
-        .padding(horizontal = 20.dp, vertical = 28.dp),
-      verticalArrangement = Arrangement.spacedBy(16.dp),
-      horizontalAlignment = Alignment.Start
+        .padding(padding),
+      color = Color.White
     ) {
-      item {
-        Text(
-          text = sede,
-          fontSize = 24.sp,
-          fontWeight = FontWeight.Bold,
-          color = CaritasNavy,
-          modifier = Modifier.padding(bottom = 12.dp)
-        )
-
-        Card(
-          shape = RoundedCornerShape(16.dp),
-          colors = CardDefaults.cardColors(containerColor = CaritasBlueTeal.copy(alpha = 0.1f)),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Column(
-            modifier = Modifier.padding(16.dp)
-          ) {
-            Text(text = "Dirección:", fontWeight = FontWeight.Bold, color = CaritasNavy)
-            Text(text = direccion, color = CaritasNavy.copy(alpha = 0.8f))
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(text = "Contacto:", fontWeight = FontWeight.Bold, color = CaritasNavy)
-            Text(text = contacto, color = CaritasNavy.copy(alpha = 0.8f))
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(text = "Horario:", fontWeight = FontWeight.Bold, color = CaritasNavy)
-            Text(text = horario, color = CaritasNavy.copy(alpha = 0.8f))
+      when {
+        isLoading -> {
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = CaritasNavy)
           }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(
-          text = "Servicios disponibles",
-          fontSize = 20.sp,
-          fontWeight = FontWeight.Bold,
-          color = CaritasNavy
-        )
-
-        Divider(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-          color = CaritasBlueTeal.copy(alpha = 0.3f),
-          thickness = 1.dp
-        )
-      }
-
-      items(servicios.size) { index ->
-        val servicio = servicios[index]
-        Card(
-          shape = RoundedCornerShape(16.dp),
-          colors = CardDefaults.cardColors(containerColor = Color.White),
-          elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Column(
-            modifier = Modifier.padding(16.dp)
-          ) {
+        error != null -> {
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-              text = servicio.titulo,
+              text = error,
+              color = Color.Red,
+              fontWeight = FontWeight.Medium,
+              textAlign = TextAlign.Center,
+              fontSize = 16.sp,
+              modifier = Modifier.padding(24.dp)
+            )
+          }
+        }
+
+        servicios.isEmpty() -> {
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+              text = "No hay servicios registrados en esta sede.",
+              color = CaritasNavy,
               fontSize = 18.sp,
-              fontWeight = FontWeight.Bold,
-              color = CaritasNavy
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-              text = servicio.descripcion,
-              fontSize = 15.sp,
-              color = CaritasNavy.copy(alpha = 0.9f),
-              lineHeight = 20.sp
+              textAlign = TextAlign.Center,
+              modifier = Modifier.padding(24.dp)
             )
           }
         }
+
+        else -> {
+          LazyColumn(
+            modifier = Modifier
+              .fillMaxSize()
+              .padding(horizontal = 20.dp, vertical = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+          ) {
+            item {
+              Text(
+                text = sedeName,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = CaritasNavy,
+                modifier = Modifier.padding(bottom = 6.dp)
+              )
+
+              Text(
+                text = "Servicios disponibles",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = CaritasBlueTeal,
+                modifier = Modifier.padding(bottom = 8.dp)
+              )
+
+              Divider(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .padding(bottom = 12.dp),
+                color = CaritasBlueTeal.copy(alpha = 0.3f),
+                thickness = 1.dp
+              )
+            }
+
+            items(servicios) { servicio ->
+              ServicioCard(servicio)
+            }
+
+            item { Spacer(modifier = Modifier.height(30.dp)) }
+          }
+        }
+      }
+    }
+  }
+}
+
+@Composable
+fun ServicioCard(servicio: ServicioItem) {
+  Card(
+    shape = RoundedCornerShape(20.dp),
+    colors = CardDefaults.cardColors(containerColor = CaritasBlueTeal.copy(alpha = 0.08f)),
+    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    modifier = Modifier.fillMaxWidth()
+  ) {
+    Column(modifier = Modifier.padding(20.dp)) {
+      Text(
+        text = servicio.nombreservicio,
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold,
+        color = CaritasNavy
+      )
+
+      servicio.descripcion?.let {
+        Text(
+          text = it,
+          fontSize = 15.sp,
+          color = CaritasNavy.copy(alpha = 0.9f),
+          lineHeight = 20.sp,
+          modifier = Modifier.padding(top = 6.dp)
+        )
       }
 
-      item {
-        Spacer(modifier = Modifier.height(30.dp))
+      servicio.capacidad?.let {
+        Text(
+          text = "Capacidad: $it",
+          fontSize = 14.sp,
+          color = CaritasNavy.copy(alpha = 0.8f),
+          modifier = Modifier.padding(top = 6.dp)
+        )
+      }
+
+      Row(modifier = Modifier.padding(top = 4.dp)) {
+        servicio.horainicio?.let {
+          Text(
+            text = "Inicio: $it",
+            color = CaritasNavy.copy(alpha = 0.9f),
+            fontSize = 14.sp
+          )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        servicio.horafinal?.let {
+          Text(
+            text = "Fin: $it",
+            color = CaritasNavy.copy(alpha = 0.9f),
+            fontSize = 14.sp
+          )
+        }
       }
     }
   }

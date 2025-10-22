@@ -1,69 +1,70 @@
 import { pool } from "../../compartido/db/pool.js";
 
-/**
- * Controlador que devuelve los datos del transporte (sede y teléfono)
- * asociados a la última reserva activa o futura de un beneficiario.
- */
-export async function obtenerDatosTransporte(req, res) {
+export async function solicitarTransporte(req, res) {
   try {
-    let { telefono } = req.query;
+    console.log("📩 Incoming transporte request:", req.body);
 
-    // 🧩 Validar parámetro
-    if (!telefono) {
+    const { telefono, direccion, descripcion } = req.body;
+
+    if (!telefono || !direccion) {
+      console.log("⚠️ Missing required data:", { telefono, direccion });
       return res.status(400).json({
         success: false,
-        message: "Falta el parámetro 'telefono'",
+        message: "Faltan datos requeridos",
       });
     }
 
-    // 🧹 Normalizar formato del teléfono (quita espacios y asegura prefijo +52)
-    telefono = telefono.replace(/\s+/g, ""); // elimina espacios
-    if (!telefono.startsWith("+52")) {
-      if (telefono.startsWith("52")) telefono = "+" + telefono;
-      else if (!telefono.startsWith("+")) telefono = "+52" + telefono;
-    }
-
-    // 🔍 Query: incluye reservas activas o futuras
-    const query = `
-      SELECT 
-        s.nombre AS sede,
-        b.telefono,
-        b.nombre AS beneficiario
+    // 🔍 Buscar reserva activa (sin normalizar)
+    const queryReserva = `
+      SELECT r.idsede, b.nombre
       FROM reserva r
       JOIN beneficiario b ON b.id = r.idbeneficiario
-      JOIN sede s ON s.id = r.idsede
       WHERE REPLACE(b.telefono, ' ', '') = $1
-      AND (
-        r.fechasalida IS NULL 
-        OR r.fechasalida > NOW()
-        OR r.fechainicio > NOW()   -- ✅ incluye reservas futuras
-      )
+      AND (r.fechasalida IS NULL OR r.fechasalida > NOW())
       ORDER BY r.fechainicio DESC
       LIMIT 1;
     `;
+    console.log("🔍 Ejecutando consulta de reserva...");
+    const reservaResult = await pool.query(queryReserva, [telefono]);
+    const rows = reservaResult.rows;
+    console.log("🔍 Resultado de reserva:", rows);
 
-    const { rows } = await pool.query(query, [telefono]);
-
-    // 🚫 Sin resultados
     if (rows.length === 0) {
+      console.log("❌ No se encontró reserva activa para este teléfono.");
       return res.status(404).json({
         success: false,
         message: "No se encontró una reserva activa para este teléfono",
       });
     }
 
-    // ✅ Respuesta correcta
-    res.status(200).json({
-      success: true,
-      message: "Datos de transporte obtenidos correctamente",
-      data: rows[0],
-    });
+    const { idsede, nombre } = rows[0];
+    console.log("✅ Reserva activa encontrada:", { idsede, nombre });
 
+    // 🔹 Insertar solicitud de transporte en Parada
+    const queryInsert = `
+      INSERT INTO parada (nombre, descripcion, ubicacion, estatus, idsede)
+      VALUES ($1, $2, $3, true, $4)
+      RETURNING *;
+    `;
+    console.log("📝 Insertando nueva Parada...");
+    const insertResult = await pool.query(queryInsert, [
+      `Solicitud de ${nombre}`,
+      descripcion || "Sin descripción",
+      direccion,
+      idsede,
+    ]);
+    console.log("✅ Parada insertada correctamente:", insertResult.rows[0]);
+
+    res.status(201).json({
+      success: true,
+      message: "Solicitud de transporte registrada correctamente",
+      data: insertResult.rows[0],
+    });
   } catch (error) {
-    console.error("Error al obtener datos de transporte:", error);
+    console.error("❌ Error al registrar transporte:", error);
     res.status(500).json({
       success: false,
-      message: "Error al obtener datos de transporte",
+      message: "Error al registrar transporte",
       error: error.message,
     });
   }
