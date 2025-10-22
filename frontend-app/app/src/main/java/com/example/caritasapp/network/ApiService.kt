@@ -27,4 +27,15 @@ interface ApiService {
   suspend fun solicitarTransporte(
     @Body request: TransporteRequest
   ): Response<Unit>
+
+  @POST("movil/ratings/crear")
+  suspend fun crearRating(
+    @Body ratingRequest: RatingRequest
+  ): Response<GenericResponse>
+
+  @GET("movil/sedes-info")
+  suspend fun getSedesConServicios(): Response<SedesInfoResponse>
+
+  @GET("movil/ratings/promedio/{id_sede}")
+  suspend fun obtenerPromedioRating(@Path("id_sede") idSede: Int): Response<RatingPromedioResponse>
 }

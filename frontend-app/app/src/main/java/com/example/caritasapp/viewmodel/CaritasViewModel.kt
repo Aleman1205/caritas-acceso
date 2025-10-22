@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.caritasapp.network.ApiService
+import com.example.caritasapp.network.RatingRequest
 import com.example.caritasapp.network.RetrofitClient
+import com.example.caritasapp.network.SedeInfoItem
 import com.example.caritasapp.network.ServicioItem
 import com.example.caritasapp.network.TransporteRequest
 import kotlinx.coroutines.launch
@@ -79,6 +81,70 @@ class CaritasViewModel : ViewModel() {
       } catch (e: Exception) {
         e.printStackTrace()
         onError("Error de conexión con el servidor")
+      }
+    }
+  }
+
+  fun enviarRating(idSede: Int, estrellas: Int, comentario: String, onResult: (Boolean, String) -> Unit) {
+    viewModelScope.launch {
+      try {
+        val response = apiService.crearRating(
+          RatingRequest(estrellas, comentario.ifBlank { null }, idSede)
+        )
+        if (response.isSuccessful && response.body()?.success == true) {
+          onResult(true, "Gracias por tu calificación <3")
+        } else {
+          onResult(false, response.body()?.message ?: "Error al enviar rating")
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+        onResult(false, "Error de conexión con el servidor")
+      }
+    }
+  }
+
+  // --- Inside CaritasViewModel.kt ---
+  var sedesInfo = mutableStateOf<List<SedeInfoItem>>(emptyList())
+  var isLoadingSedesInfo = mutableStateOf(false)
+  var errorSedesInfo = mutableStateOf<String?>(null)
+
+  fun getSedesConServicios() {
+    viewModelScope.launch {
+      try {
+        isLoadingSedesInfo.value = true
+        errorSedesInfo.value = null
+
+        val response = RetrofitClient.instance.create(ApiService::class.java)
+          .getSedesConServicios()
+
+        if (response.isSuccessful && response.body()?.success == true) {
+          sedesInfo.value = response.body()!!.data
+        } else {
+          errorSedesInfo.value = "Error al obtener las sedes."
+        }
+      } catch (e: Exception) {
+        errorSedesInfo.value = "Error: ${e.localizedMessage}"
+      } finally {
+        isLoadingSedesInfo.value = false
+      }
+    }
+  }
+
+  fun getPromedioRating(idSede: Int, onResult: (Double?, Int?) -> Unit) {
+    viewModelScope.launch {
+      try {
+        val response = apiService.obtenerPromedioRating(idSede)
+        if (response.isSuccessful && response.body()?.success == true) {
+          val data = response.body()?.data
+          val promedio = data?.promedio ?: 0.0
+          val total = data?.total_reviews ?: 0
+          onResult(promedio, total)
+        } else {
+          onResult(null, null)
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
+        onResult(null, null)
       }
     }
   }

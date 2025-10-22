@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.caritasapp.navigation.Screen
+import com.example.caritasapp.ui.components.CaritasScaffold
 import com.example.caritasapp.ui.theme.*
 import com.example.caritasapp.viewmodel.CaritasViewModel
-import kotlinx.coroutines.launch
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import androidx.core.graphics.createBitmap
@@ -28,67 +28,74 @@ import androidx.core.graphics.set
 @Composable
 fun ReservationQRScreen(navController: NavHostController, viewModel: CaritasViewModel) {
   val clave by viewModel.reservationClave
-
   val qrBitmap = remember(clave) { generateQRCode(clave) }
 
-  Scaffold(
-    containerColor = Color.White
-  ) { padding ->
-    Column(
+  CaritasScaffold(navController) { padding ->
+    Surface(
       modifier = Modifier
         .fillMaxSize()
-        .padding(padding)
-        .padding(horizontal = 24.dp, vertical = 36.dp),
-      horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.Center
+        .padding(padding),
+      color = Color.White
     ) {
-      Text(
-        text = "¡Reserva completada con éxito!\nMuestra este código en tu sede.",
-        textAlign = TextAlign.Center,
-        fontSize = 20.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = CaritasNavy,
-        modifier = Modifier.padding(bottom = 24.dp)
-      )
-
-      qrBitmap?.let {
-        Image(
-          bitmap = it.asImageBitmap(),
-          contentDescription = "QR Code",
-          modifier = Modifier
-            .size(240.dp)
-            .background(CaritasLight)
-            .padding(4.dp)
-        )
-      }
-
-      Spacer(modifier = Modifier.height(24.dp))
-
-      Text(
-        text = "Clave: $clave",
-        fontSize = 18.sp,
-        color = CaritasNavy,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(bottom = 36.dp)
-      )
-
-      Button(
-        onClick = {
-          viewModel.hasActiveReservation.value = true
-          navController.navigate(Screen.Home.route)
-                  },
-        colors = ButtonDefaults.buttonColors(containerColor = CaritasBlueTeal),
-        shape = RoundedCornerShape(24.dp),
+      Column(
         modifier = Modifier
-          .fillMaxWidth()
-          .height(70.dp)
+          .fillMaxSize()
+          .padding(horizontal = 24.dp, vertical = 36.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
       ) {
-        Text("Terminar Registro", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = CaritasLight)
+        Text(
+          text = "¡Reserva completada con éxito!\nMuestra este código en tu sede.",
+          textAlign = TextAlign.Center,
+          fontSize = 20.sp,
+          fontWeight = FontWeight.SemiBold,
+          color = CaritasNavy,
+          modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        qrBitmap?.let {
+          Image(
+            bitmap = it.asImageBitmap(),
+            contentDescription = "QR Code",
+            modifier = Modifier
+              .size(240.dp)
+              .background(CaritasLight, RoundedCornerShape(16.dp))
+              .padding(8.dp)
+          )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+          text = "Clave: $clave",
+          fontSize = 18.sp,
+          color = CaritasNavy,
+          fontWeight = FontWeight.Medium,
+          modifier = Modifier.padding(bottom = 36.dp)
+        )
+
+        Button(
+          onClick = {
+            viewModel.hasActiveReservation.value = true
+            navController.navigate(Screen.Home.route)
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = CaritasBlueTeal),
+          shape = RoundedCornerShape(24.dp),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(70.dp)
+        ) {
+          Text(
+            "Terminar Registro",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = CaritasLight
+          )
+        }
       }
     }
   }
 }
-
 
 fun generateQRCode(text: String): Bitmap? = try {
   val writer = QRCodeWriter()

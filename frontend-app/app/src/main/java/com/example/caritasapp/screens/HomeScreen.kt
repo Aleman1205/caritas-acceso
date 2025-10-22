@@ -22,6 +22,7 @@ import androidx.navigation.NavHostController
 import com.example.caritasapp.navigation.Screen
 import com.example.caritasapp.network.ApiService
 import com.example.caritasapp.network.RetrofitClient
+import com.example.caritasapp.ui.components.CaritasScaffold
 import com.example.caritasapp.ui.theme.*
 import com.example.caritasapp.viewmodel.CaritasViewModel
 import kotlinx.coroutines.launch
@@ -52,7 +53,6 @@ fun HomeScreen(navController: NavHostController, viewModel: CaritasViewModel) {
   var isLoading by remember { mutableStateOf(true) }
   var errorMessage by remember { mutableStateOf<String?>(null) }
 
-  // ✅ Show snackbar when returning from reservation cancellation
   val resetReservation =
     navController.currentBackStackEntry?.savedStateHandle?.get<Boolean>("reservation_reset")
       ?: false
@@ -66,7 +66,6 @@ fun HomeScreen(navController: NavHostController, viewModel: CaritasViewModel) {
     }
   }
 
-  // ✅ Load sedes from backend
   LaunchedEffect(Unit) {
     scope.launch {
       try {
@@ -176,103 +175,99 @@ fun HomeScreen(navController: NavHostController, viewModel: CaritasViewModel) {
     }
   }
 
-  // ✅ Scaffold allows snackbar to show
-  Scaffold(
-    snackbarHost = { SnackbarHost(snackbarHostState) },
-    containerColor = White
-  ) { padding ->
-    Column(
-      modifier = Modifier
-        .fillMaxSize()
-        .verticalScroll(rememberScrollState())
-        .padding(horizontal = 20.dp, vertical = 36.dp)
-        .padding(padding),
-      horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-      // 🟩 Sede selector box
-      Box(
+  CaritasScaffold(navController) { padding ->
+    Scaffold(
+      snackbarHost = { SnackbarHost(snackbarHostState) },
+      containerColor = White,
+      modifier = Modifier.padding(padding)
+    ) { innerPadding ->
+      Column(
         modifier = Modifier
-          .fillMaxWidth()
-          .background(CaritasBlueTeal.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
-          .clickable(enabled = !hasReservation) { showSedeSheet = true }
-          .padding(vertical = 18.dp, horizontal = 16.dp)
+          .fillMaxSize()
+          .verticalScroll(rememberScrollState())
+          .padding(horizontal = 20.dp, vertical = 36.dp)
+          .padding(innerPadding),
+        horizontalAlignment = Alignment.CenterHorizontally
       ) {
-        Text(
-          text = selectedSedeName ?: "Seleccionar Sede",
-          fontSize = 22.sp,
-          fontWeight = FontWeight.SemiBold,
-          color = if (hasReservation) CaritasNavy.copy(alpha = 0.5f) else CaritasNavy
-        )
-      }
-
-      Spacer(modifier = Modifier.height(30.dp))
-
-      Text(
-        text = "Seleccionar el servicio deseado",
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
-        color = CaritasNavy,
-        modifier = Modifier.padding(bottom = 25.dp)
-      )
-
-      // 🟩 Reservar alojamiento
-      ServiceButton(
-        text = "Reservar alojamiento en sede",
-        color = CaritasBlueTeal,
-        enabled = sedeSelected && !hasReservation,
-        onClick = {
-          viewModel.hasActiveReservation.value = true
-          navController.navigate(Screen.Reserve.route)
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .background(CaritasBlueTeal.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
+            .clickable(enabled = !hasReservation) { showSedeSheet = true }
+            .padding(vertical = 18.dp, horizontal = 16.dp)
+        ) {
+          Text(
+            text = selectedSedeName ?: "Seleccionar Sede",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (hasReservation) CaritasNavy.copy(alpha = 0.5f) else CaritasNavy
+          )
         }
-      )
 
-      // 🟩 Transporte
-      ServiceButton(
-        text = "Transporte",
-        color = CaritasBlueTeal,
-        enabled = hasReservation,
-        onClick = { navController.navigate(Screen.Transporte.route) }
-      )
+        Spacer(modifier = Modifier.height(30.dp))
 
-      // 🟩 Consultar servicios
-      ServiceButton(
-        text = "Consultar servicios del sede",
-        color = CaritasBlueTeal,
-        enabled = sedeSelected,
-        onClick = { navController.navigate(Screen.ConsultarServicios.route) }
-      )
-
-      // 🟩 Reseña y valoración
-      ServiceButton(
-        text = "Reseña y valoración",
-        color = CaritasBlueTeal,
-        enabled = sedeSelected,
-        onClick = { navController.navigate(Screen.Terms.route) }
-      )
-
-      Spacer(modifier = Modifier.height(10.dp))
-
-      // 🟩 Consultar reservas
-      Button(
-        onClick = { navController.navigate(Screen.ConsultarReservas.route) },
-        enabled = hasReservation,
-        colors = ButtonDefaults.buttonColors(
-          containerColor = if (hasReservation) CaritasNavy else CaritasNavy.copy(alpha = 0.4f)
-        ),
-        shape = RoundedCornerShape(40.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(100.dp)
-      ) {
         Text(
-          text = "Consultar mis reservas",
-          fontSize = 22.sp,
-          textAlign = TextAlign.Center,
-          fontWeight = FontWeight.Bold
+          text = "Seleccionar el servicio deseado",
+          fontSize = 24.sp,
+          fontWeight = FontWeight.Bold,
+          color = CaritasNavy,
+          modifier = Modifier.padding(bottom = 25.dp)
         )
-      }
 
-      Spacer(modifier = Modifier.height(20.dp))
+        ServiceButton(
+          text = "Reservar alojamiento en sede",
+          color = CaritasBlueTeal,
+          enabled = sedeSelected && !hasReservation,
+          onClick = {
+            viewModel.hasActiveReservation.value = true
+            navController.navigate(Screen.Reserve.route)
+          }
+        )
+
+        ServiceButton(
+          text = "Transporte",
+          color = CaritasBlueTeal,
+          enabled = hasReservation,
+          onClick = { navController.navigate(Screen.Transporte.route) }
+        )
+
+        ServiceButton(
+          text = "Consultar servicios del sede",
+          color = CaritasBlueTeal,
+          enabled = sedeSelected,
+          onClick = { navController.navigate(Screen.ConsultarServicios.route) }
+        )
+
+        ServiceButton(
+          text = "Reseña y valoración",
+          color = CaritasBlueTeal,
+          enabled = sedeSelected,
+          onClick = { navController.navigate(Screen.Resena.route) }
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Button(
+          onClick = { navController.navigate(Screen.ConsultarReservas.route) },
+          enabled = hasReservation,
+          colors = ButtonDefaults.buttonColors(
+            containerColor = if (hasReservation) CaritasNavy else CaritasNavy.copy(alpha = 0.4f)
+          ),
+          shape = RoundedCornerShape(40.dp),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+        ) {
+          Text(
+            text = "Consultar mis reservas",
+            fontSize = 22.sp,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold
+          )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+      }
     }
   }
 }
