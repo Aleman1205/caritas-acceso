@@ -9,7 +9,6 @@ function fmt(n: number | undefined) {
 }
 
 export default function DashboardPage() {
-  const [fecha, setFecha] = useState<string>(""); // vacío = "todas"
   const [data, setData] = useState<DashboardWeb | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
@@ -18,7 +17,8 @@ export default function DashboardPage() {
     setLoading(true);
     setErr(null);
     try {
-      const resp = await api.getDashboard(fecha ? fecha : undefined);
+      // Sin filtro de fecha
+      const resp = await api.getDashboard();
       if (resp?.success) {
         setData(resp.data);
       } else {
@@ -40,22 +40,8 @@ export default function DashboardPage() {
 
   return (
     <main className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
-
-      {/* Filtros */}
-      <section className="flex items-end gap-3">
-        <div>
-          <label className="block text-sm mb-1">Fecha</label>
-          <input
-            type="date"
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            className="rounded-md bg-slate-800 border border-slate-700 px-3 py-2"
-          />
-          <p className="text-xs text-slate-400 mt-1">
-            Déjalo vacío para consultar <em>todas</em> las reservas.
-          </p>
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
         <button
           onClick={load}
           disabled={loading}
@@ -63,7 +49,7 @@ export default function DashboardPage() {
         >
           {loading ? "Actualizando…" : "Actualizar"}
         </button>
-      </section>
+      </div>
 
       {err && (
         <div className="rounded-md border border-red-600 bg-red-900/30 px-4 py-2 text-red-200">
@@ -94,7 +80,7 @@ export default function DashboardPage() {
               {!data?.resumenPorSede?.length ? (
                 <tr>
                   <td colSpan={3} className="p-4 text-slate-400">
-                    {loading ? "Cargando…" : "Sin datos para la fecha seleccionada."}
+                    {loading ? "Cargando…" : "Sin datos."}
                   </td>
                 </tr>
               ) : (
@@ -130,10 +116,9 @@ function Th({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <th className={`p-3 text-left ${className}`.trim()}>{children}</th>
-  );
+  return <th className={`p-3 text-left ${className}`.trim()}>{children}</th>;
 }
+
 function Td({
   children,
   className = "",

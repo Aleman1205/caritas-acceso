@@ -11,9 +11,7 @@ function qs(params?: Record<string, any>) {
   const entries = Object.entries(params).filter(
     ([, v]) => v !== undefined && v !== null && v !== ""
   );
-  return entries.length
-    ? `?${new URLSearchParams(entries as any).toString()}`
-    : "";
+  return entries.length ? `?${new URLSearchParams(entries as any).toString()}` : "";
 }
 
 // asegura "/" y evita dobles slashes, funciona con BASE_URL vacío
@@ -107,6 +105,7 @@ export type ReservaTelefono = {
   mujeres: number | null;
   status: "pendiente" | "en_estancia" | "finalizada" | "confirmada" | "cancelada";
   telefono?: string | null;
+  beneficiario?: string | null;
 };
 
 type ApiResponse<T> = { success: boolean; message: string; data: T };
@@ -176,10 +175,8 @@ export const api = {
   deleteServicio: (id: string | number) => api.deleteServicios([id]),
 
   // -------- Sede-Servicios --------
-  getSedeServicios: (f?: any) =>
-    http<SedeServicio[]>(`/api/sede-servicios/obtener${qs(f)}`),
-  getSedeServicioById: (id: string | number) =>
-    http<SedeServicio>(`/api/sede-servicios/obtener/${id}`),
+  getSedeServicios: (f?: any) => http<SedeServicio[]>(`/api/sede-servicios/obtener${qs(f)}`),
+  getSedeServicioById: (id: string | number) => http<SedeServicio>(`/api/sede-servicios/obtener/${id}`),
   createSedeServicio: (b: Partial<SedeServicio>) =>
     http(`/api/sede-servicios/crear`, { method: "POST", body: JSON.stringify(b) }),
   updateSedeServicio: (id: string | number, b: Partial<SedeServicio>) =>
@@ -230,7 +227,7 @@ export const api = {
       method: "DELETE",
     }),
 
-  // -------- Reservas --------
+  // -------- Reservas (CRUD base) --------
   createReserva: (b: Partial<Reserva>) =>
     http(`/api/reservas/crear`, { method: "POST", body: JSON.stringify(b) }),
   getReservas: (f?: any) => http<Reserva[]>(`/api/reservas/obtener${qs(f)}`),
@@ -243,11 +240,22 @@ export const api = {
   deleteReservas: (ids: string[]) =>
     http(`/api/reservas/eliminar`, { method: "DELETE", body: JSON.stringify({ Ids: ids }) }),
 
-  // Buscar reservas por teléfono (backend actual: /web/reservas/:telefono)
-  getReservasByTelefono: async (tel: string) => {
-    const r = await http<ApiResponse<ReservaTelefono[]>>(`/web/reservas/${encodeURIComponent(tel)}`);
-    return r; // r.success, r.message, r.data
-  },
+  // --- Reservas (web): por teléfono, todas, fin e interacción de borrado/movido ---
+  getReservasByTelefono: async (tel: string) =>
+    http<ApiResponse<ReservaTelefono[]>>(`/web/reservas/${encodeURIComponent(tel)}`),
+
+  getReservasAll: async () =>
+    http<ApiResponse<ReservaTelefono[]>>(`/web/reservas`),
+
+  // NUEVO: listar las reservas movidas a 'reservafin'
+  getReservasFin: async () =>
+    http<ApiResponse<ReservaTelefono[]>>(`/web/reservas/fin`),
+
+  // NUEVO: mover a 'reservafin' + eliminar desde /web (DELETE)
+  deleteReservaWeb: async (idTransaccion: string) =>
+    http<ApiResponse<[]>>(`/web/reservas/${encodeURIComponent(idTransaccion)}`, {
+      method: "DELETE",
+    }),
 
   // -------- Compras --------
   createCompra: (b: Partial<Compra>) =>
