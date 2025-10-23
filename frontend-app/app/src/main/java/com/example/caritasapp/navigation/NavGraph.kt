@@ -20,6 +20,7 @@ sealed class Screen(val route: String) {
   object Transporte : Screen("transporte")
   object ConsultarServicios : Screen("consultar_servicios")
   object ConsultarReservas : Screen("consultar_reservas")
+  object Resena : Screen("resena")
 }
 
 @Composable
@@ -33,7 +34,7 @@ fun AppNavGraph(navController: NavHostController) {
   ) {
     composable(Screen.Splash.route) { SplashScreen(navController) }
     composable(Screen.Terms.route) { TermsScreen(navController) }
-    composable(Screen.Start.route) { StartScreen(navController) }
+    composable(Screen.Start.route) { StartScreen(navController, sharedViewModel) }
 
     // ✅ Pass the shared ViewModel to these screens
     composable(Screen.Home.route) { HomeScreen(navController, sharedViewModel) }
@@ -44,5 +45,6 @@ fun AppNavGraph(navController: NavHostController) {
     composable(Screen.ReservationForm.route) { ReservationFormScreen(navController, sharedViewModel) }
     composable(Screen.ReservationQR.route) { ReservationQRScreen(navController, sharedViewModel) }
     composable(Screen.ConsultarReservas.route) { ConsultarReservasScreen(navController, sharedViewModel) }
+    composable(Screen.Resena.route) { ResenaScreen(navController, sharedViewModel) }
   }
 }

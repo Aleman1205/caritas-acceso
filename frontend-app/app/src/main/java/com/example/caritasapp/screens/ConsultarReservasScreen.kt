@@ -1,5 +1,7 @@
 package com.example.caritasapp.screens
 
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,21 +10,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.caritasapp.navigation.Screen
+import com.example.caritasapp.ui.components.CaritasScaffold
 import com.example.caritasapp.ui.theme.*
 import com.example.caritasapp.viewmodel.CaritasViewModel
-import kotlinx.coroutines.launch
-import android.graphics.Bitmap
-import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
+import kotlinx.coroutines.launch
 
 data class ReservaDetalle(
   val clave: String,
@@ -33,7 +33,6 @@ data class ReservaDetalle(
   val mujeres: Int
 )
 
-// ✅ QR Generator
 fun generateQrCode(content: String): Bitmap? {
   return try {
     val writer = QRCodeWriter()
@@ -43,7 +42,11 @@ fun generateQrCode(content: String): Bitmap? {
     val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
     for (x in 0 until width) {
       for (y in 0 until height) {
-        bmp.setPixel(x, y, if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+        bmp.setPixel(
+          x,
+          y,
+          if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+        )
       }
     }
     bmp
@@ -87,97 +90,100 @@ fun ConsultarReservasScreen(navController: NavHostController, viewModel: Caritas
     }
   }
 
-  Scaffold(
-    snackbarHost = { SnackbarHost(snackbarHostState) }
-  ) { padding ->
-    Surface(
-      modifier = Modifier
-        .fillMaxSize()
-        .padding(padding),
-      color = Color.White
-    ) {
-      when {
-        isLoading -> {
-          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = CaritasBlueTeal)
-          }
-        }
-
-        errorMessage != null -> {
-          Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-          ) {
-            Text(
-              text = errorMessage ?: "Error desconocido",
-              color = Color.Red,
-              fontSize = 16.sp,
-              textAlign = TextAlign.Center
-            )
-          }
-        }
-
-        else -> {
-          Column(
-            modifier = Modifier
-              .fillMaxSize()
-              .padding(horizontal = 24.dp, vertical = 36.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-          ) {
-            Text(
-              text = "Detalles de tu Reserva",
-              fontSize = 26.sp,
-              fontWeight = FontWeight.Bold,
-              color = CaritasNavy,
-              modifier = Modifier.padding(bottom = 28.dp)
-            )
-
-            reserva?.let {
-              // 🟩 Show QR Code above the card
-              val qrBitmap = remember { generateQrCode(it.clave) }
-              qrBitmap?.let { bmp ->
-                Image(
-                  bitmap = bmp.asImageBitmap(),
-                  contentDescription = "QR Code",
-                  modifier = Modifier
-                    .size(180.dp)
-                    .padding(bottom = 16.dp)
-                )
-              }
-
-              ReservaCard(it)
+  CaritasScaffold(navController) { padding ->
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { innerPadding ->
+      Surface(
+        modifier = Modifier
+          .fillMaxSize()
+          .padding(padding)
+          .padding(innerPadding),
+        color = Color.White
+      ) {
+        when {
+          isLoading -> {
+            Box(
+              modifier = Modifier.fillMaxSize(),
+              contentAlignment = Alignment.Center
+            ) {
+              CircularProgressIndicator(color = CaritasBlueTeal)
             }
+          }
 
-            Spacer(modifier = Modifier.height(36.dp))
-
-            Button(
-              onClick = {
-                scope.launch {
-                  viewModel.hasActiveReservation.value = false
-                  viewModel.selectedSedeName.value = null
-                  viewModel.selectedSedeId.value = null
-                  viewModel.reservationClave.value = ""
-
-                  snackbarHostState.showSnackbar("Reserva finalizada correctamente ✅")
-
-                  kotlinx.coroutines.delay(1200)
-                  navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Home.route) { inclusive = true }
-                  }
-                }
-              },
-              colors = ButtonDefaults.buttonColors(containerColor = CaritasBlueTeal),
-              shape = RoundedCornerShape(24.dp),
-              modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
+          errorMessage != null -> {
+            Box(
+              modifier = Modifier.fillMaxSize(),
+              contentAlignment = Alignment.Center
             ) {
               Text(
-                text = "Finalizar Reserva",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                text = errorMessage ?: "Error desconocido",
+                color = Color.Red,
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
               )
+            }
+          }
+
+          else -> {
+            Column(
+              modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 36.dp),
+              horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+              Text(
+                text = "Detalles de tu Reserva",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = CaritasNavy,
+                modifier = Modifier.padding(bottom = 28.dp)
+              )
+
+              reserva?.let {
+                val qrBitmap = remember { generateQrCode(it.clave) }
+                qrBitmap?.let { bmp ->
+                  Image(
+                    bitmap = bmp.asImageBitmap(),
+                    contentDescription = "QR Code",
+                    modifier = Modifier
+                      .size(180.dp)
+                      .padding(bottom = 16.dp)
+                      .background(CaritasLight, RoundedCornerShape(16.dp))
+                      .padding(6.dp)
+                  )
+                }
+
+                ReservaCard(it)
+              }
+
+              Spacer(modifier = Modifier.height(36.dp))
+
+              Button(
+                onClick = {
+                  scope.launch {
+                    viewModel.hasActiveReservation.value = false
+                    viewModel.selectedSedeName.value = null
+                    viewModel.selectedSedeId.value = null
+                    viewModel.reservationClave.value = ""
+                    snackbarHostState.showSnackbar("Reserva finalizada correctamente ✅")
+                    kotlinx.coroutines.delay(1200)
+                    navController.navigate(Screen.Home.route) {
+                      popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                  }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = CaritasBlueTeal),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .height(70.dp)
+              ) {
+                Text(
+                  text = "Finalizar Reserva",
+                  fontSize = 20.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = Color.White
+                )
+              }
             }
           }
         }

@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.caritasapp.navigation.Screen
+import com.example.caritasapp.ui.components.CaritasScaffold
 import com.example.caritasapp.ui.theme.*
 import com.example.caritasapp.viewmodel.CaritasViewModel
 import java.text.SimpleDateFormat
@@ -23,7 +24,6 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReserveScreen(navController: NavHostController, viewModel: CaritasViewModel) {
-
   val selectedDate by viewModel.selectedDate
   val selectedHour by viewModel.selectedHour
   val selectedMinute by viewModel.selectedMinute
@@ -42,7 +42,7 @@ fun ReserveScreen(navController: NavHostController, viewModel: CaritasViewModel)
           onClick = {
             datePickerState.selectedDateMillis?.let {
               val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-              viewModel.selectedDate.value = formatter.format(Date(it)) // ✅ save directly
+              viewModel.selectedDate.value = formatter.format(Date(it))
             }
             openDatePicker.value = false
           }
@@ -58,114 +58,116 @@ fun ReserveScreen(navController: NavHostController, viewModel: CaritasViewModel)
     }
   }
 
-  Surface(
-    modifier = Modifier.fillMaxSize(),
-    color = Color.White
-  ) {
-    Column(
+  CaritasScaffold(navController) { padding ->
+    Surface(
       modifier = Modifier
         .fillMaxSize()
-        .padding(horizontal = 24.dp, vertical = 36.dp),
-      horizontalAlignment = Alignment.CenterHorizontally
+        .padding(padding),
+      color = Color.White
     ) {
-      Text(
-        text = "Reservación",
-        fontSize = 26.sp,
-        fontWeight = FontWeight.Bold,
-        color = CaritasNavy,
-        modifier = Modifier.padding(bottom = 28.dp)
-      )
-
-      Text(
-        text = sedeName ?: "Sin sede seleccionada",
-        fontSize = 18.sp,
-        color = CaritasNavy.copy(alpha = 0.7f),
-        modifier = Modifier.padding(bottom = 16.dp)
-      )
-
-      Box(
+      Column(
         modifier = Modifier
-          .fillMaxWidth()
-          .background(CaritasBlueTeal, RoundedCornerShape(24.dp))
-          .padding(vertical = 40.dp),
-        contentAlignment = Alignment.Center
+          .fillMaxSize()
+          .padding(horizontal = 24.dp, vertical = 36.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
       ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-          Text(
-            text = if (selectedDate.isEmpty()) "Seleccionar fecha"
-            else "Fecha seleccionada: $selectedDate",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(bottom = 12.dp)
-          )
-          Button(
-            onClick = { openDatePicker.value = true },
-            colors = ButtonDefaults.buttonColors(containerColor = CaritasNavy),
-            shape = RoundedCornerShape(16.dp)
-          ) {
-            Text("Elegir fecha", color = Color.White)
+        Text(
+          text = "Reservación",
+          fontSize = 26.sp,
+          fontWeight = FontWeight.Bold,
+          color = CaritasNavy,
+          modifier = Modifier.padding(bottom = 28.dp)
+        )
+
+        Text(
+          text = sedeName ?: "Sin sede seleccionada",
+          fontSize = 18.sp,
+          color = CaritasNavy.copy(alpha = 0.7f),
+          modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .background(CaritasBlueTeal, RoundedCornerShape(24.dp))
+            .padding(vertical = 40.dp),
+          contentAlignment = Alignment.Center
+        ) {
+          Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+              text = if (selectedDate.isEmpty()) "Seleccionar fecha"
+              else "Fecha seleccionada: $selectedDate",
+              color = Color.White,
+              fontSize = 20.sp,
+              fontWeight = FontWeight.Medium,
+              modifier = Modifier.padding(bottom = 12.dp)
+            )
+            Button(
+              onClick = { openDatePicker.value = true },
+              colors = ButtonDefaults.buttonColors(containerColor = CaritasNavy),
+              shape = RoundedCornerShape(16.dp)
+            ) {
+              Text("Elegir fecha", color = Color.White)
+            }
           }
         }
-      }
 
-      Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-      Text(
-        text = "Horario",
-        fontSize = 22.sp,
-        fontWeight = FontWeight.Bold,
-        color = CaritasNavy,
-        modifier = Modifier.padding(bottom = 16.dp)
-      )
-
-      // ✅ Directly update ViewModel values on change
-      TimeSelector(
-        selectedHour = selectedHour,
-        selectedMinute = selectedMinute,
-        amPm = amPm,
-        onHourChange = { viewModel.selectedHour.value = it },
-        onMinuteChange = { viewModel.selectedMinute.value = it },
-        onPeriodChange = { viewModel.amPm.value = it }
-      )
-
-      Spacer(modifier = Modifier.height(48.dp))
-
-      if (showError.value) {
         Text(
-          text = "Selecciona una fecha antes de continuar",
-          color = Color.Red,
-          textAlign = TextAlign.Center,
-          modifier = Modifier.padding(bottom = 12.dp)
-        )
-      }
-
-      Button(
-        onClick = {
-          if (viewModel.selectedDate.value.isEmpty()) {
-            showError.value = true
-          } else {
-            showError.value = false
-            navController.navigate(Screen.ReservationForm.route)
-          }
-        },
-        colors = ButtonDefaults.buttonColors(containerColor = CaritasBlueTeal),
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(70.dp)
-      ) {
-        Text(
-          text = "Confirmar reserva",
-          fontSize = 20.sp,
+          text = "Horario",
+          fontSize = 22.sp,
           fontWeight = FontWeight.Bold,
-          color = Color.White
+          color = CaritasNavy,
+          modifier = Modifier.padding(bottom = 16.dp)
         )
+
+        TimeSelector(
+          selectedHour = selectedHour,
+          selectedMinute = selectedMinute,
+          amPm = amPm,
+          onHourChange = { viewModel.selectedHour.value = it },
+          onMinuteChange = { viewModel.selectedMinute.value = it },
+          onPeriodChange = { viewModel.amPm.value = it }
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        if (showError.value) {
+          Text(
+            text = "Selecciona una fecha antes de continuar",
+            color = Color.Red,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 12.dp)
+          )
+        }
+
+        Button(
+          onClick = {
+            if (viewModel.selectedDate.value.isEmpty()) {
+              showError.value = true
+            } else {
+              showError.value = false
+              navController.navigate(Screen.ReservationForm.route)
+            }
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = CaritasBlueTeal),
+          shape = RoundedCornerShape(24.dp),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(70.dp)
+        ) {
+          Text(
+            text = "Confirmar reserva",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+          )
+        }
       }
     }
   }
 }
-
 
 @Composable
 fun TimeSelector(
@@ -185,9 +187,9 @@ fun TimeSelector(
     horizontalArrangement = Arrangement.SpaceEvenly,
     verticalAlignment = Alignment.CenterVertically
   ) {
-    DropdownBox(label = "Hora", options = hours, selected = selectedHour, onSelect = onHourChange)
-    DropdownBox(label = "Minuto", options = minutes, selected = selectedMinute, onSelect = onMinuteChange)
-    DropdownBox(label = "Periodo", options = periods, selected = amPm, onSelect = onPeriodChange)
+    DropdownBox("Hora", hours, selectedHour, onHourChange)
+    DropdownBox("Minuto", minutes, selectedMinute, onMinuteChange)
+    DropdownBox("Periodo", periods, amPm, onPeriodChange)
   }
 }
 
@@ -196,12 +198,7 @@ fun DropdownBox(label: String, options: List<String>, selected: String, onSelect
   var expanded by remember { mutableStateOf(false) }
 
   Column(horizontalAlignment = Alignment.CenterHorizontally) {
-    Text(
-      text = label,
-      color = CaritasNavy,
-      fontSize = 18.sp,
-      fontWeight = FontWeight.SemiBold
-    )
+    Text(label, color = CaritasNavy, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
     Spacer(modifier = Modifier.height(10.dp))
     Box {
       Box(
@@ -211,12 +208,7 @@ fun DropdownBox(label: String, options: List<String>, selected: String, onSelect
           .clickable { expanded = true },
         contentAlignment = Alignment.Center
       ) {
-        Text(
-          text = selected,
-          color = CaritasNavy,
-          fontSize = 22.sp,
-          fontWeight = FontWeight.Bold
-        )
+        Text(selected, color = CaritasNavy, fontSize = 22.sp, fontWeight = FontWeight.Bold)
       }
 
       DropdownMenu(
