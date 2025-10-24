@@ -54,6 +54,11 @@ dependencies {
   // Add the ZXing core dependency here
   implementation("com.google.zxing:core:3.5.3")
   implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
+
+  implementation("com.squareup.retrofit2:retrofit:2.9.0")
+  implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+  implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+  
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.espresso.core)
