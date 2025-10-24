@@ -1,5 +1,5 @@
 import express from "express";
-import bodyParser from "body-parser"; // 👈 lo agregamos solo aquí
+import bodyParser from "body-parser"; // lo agregamos solo aquí
 import { obtenerPromedioRating, crearRating } from "../controllers/ratingsController.js";
 
 export const router = express.Router();
