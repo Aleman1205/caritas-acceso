@@ -2,12 +2,12 @@ import { pool } from "../../compartido/db/pool.js";
 
 export async function solicitarTransporte(req, res) {
   try {
-    console.log("📩 Incoming transporte request:", req.body);
+    console.log("Incoming transporte request:", req.body);
 
     const { telefono, direccion, descripcion } = req.body;
 
     if (!telefono || !direccion) {
-      console.log("⚠️ Missing required data:", { telefono, direccion });
+      console.log("Missing required data:", { telefono, direccion });
       return res.status(400).json({
         success: false,
         message: "Faltan datos requeridos",
@@ -30,7 +30,7 @@ export async function solicitarTransporte(req, res) {
     console.log("🔍 Resultado de reserva:", rows);
 
     if (rows.length === 0) {
-      console.log("❌ No se encontró reserva activa para este teléfono.");
+      console.log("No se encontró reserva activa para este teléfono.");
       return res.status(404).json({
         success: false,
         message: "No se encontró una reserva activa para este teléfono",
@@ -38,22 +38,22 @@ export async function solicitarTransporte(req, res) {
     }
 
     const { idsede, nombre } = rows[0];
-    console.log("✅ Reserva activa encontrada:", { idsede, nombre });
+    console.log("Reserva activa encontrada:", { idsede, nombre });
 
-    // 🔹 Insertar solicitud de transporte en Parada
+    // Insertar solicitud de transporte en Parada
     const queryInsert = `
       INSERT INTO parada (nombre, descripcion, ubicacion, estatus, idsede)
       VALUES ($1, $2, $3, true, $4)
       RETURNING *;
     `;
-    console.log("📝 Insertando nueva Parada...");
+    console.log("Insertando nueva Parada...");
     const insertResult = await pool.query(queryInsert, [
       `Solicitud de ${nombre}`,
       descripcion || "Sin descripción",
       direccion,
       idsede,
     ]);
-    console.log("✅ Parada insertada correctamente:", insertResult.rows[0]);
+    console.log("Parada insertada correctamente:", insertResult.rows[0]);
 
     res.status(201).json({
       success: true,
@@ -61,7 +61,7 @@ export async function solicitarTransporte(req, res) {
       data: insertResult.rows[0],
     });
   } catch (error) {
-    console.error("❌ Error al registrar transporte:", error);
+    console.error("Error al registrar transporte:", error);
     res.status(500).json({
       success: false,
       message: "Error al registrar transporte",
