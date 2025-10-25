@@ -11,6 +11,7 @@ export async function obtenerPromedioRating(req, res) {
       });
     }
 
+    // 🔍 Consulta SQL: promedio y total de reseñas
     const query = `
       SELECT 
         s.id AS id_sede,
@@ -25,6 +26,7 @@ export async function obtenerPromedioRating(req, res) {
 
     const { rows } = await pool.query(query, [id_sede]);
 
+    // 🚫 Sin reseñas
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
@@ -32,6 +34,7 @@ export async function obtenerPromedioRating(req, res) {
       });
     }
 
+    // ✅ Respuesta exitosa
     res.status(200).json({
       success: true,
       message: "Promedio obtenido correctamente",
@@ -52,6 +55,7 @@ export async function crearRating(req, res) {
   try {
     const { int_estrellas, comentarios, id_sede } = req.body;
 
+    // 🧩 Validación de campos requeridos
     if (!int_estrellas || !id_sede) {
       return res.status(400).json({
         success: false,
@@ -59,6 +63,7 @@ export async function crearRating(req, res) {
       });
     }
 
+    // 🚀 Inserción en la base de datos
     const query = `
       INSERT INTO rating (int_estrellas, comentarios, id_sede)
       VALUES ($1, $2, $3)
@@ -71,6 +76,7 @@ export async function crearRating(req, res) {
       id_sede,
     ]);
 
+    // ✅ Respuesta exitosa
     res.status(201).json({
       success: true,
       message: "Rating registrado correctamente",
