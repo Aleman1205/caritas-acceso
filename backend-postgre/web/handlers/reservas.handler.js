@@ -48,7 +48,6 @@ export async function fetchReservasAll() {
   return rows;
 }
 
-/* ======================= NUEVO ======================= */
 /** Elimina una reserva por IdTransaccion en la tabla `reserva`. */
 export async function deleteReservaByIdTx(idTransaccion) {
   const { rowCount } = await pool.query(

@@ -15,7 +15,6 @@ type CupoHorario = {
   estatus: string | number | boolean | null;
 };
 
-/* ==================== Helpers de formato/normalización ==================== */
 function fmtEntero(n: unknown) {
   const num =
     typeof n === "number" ? n :
