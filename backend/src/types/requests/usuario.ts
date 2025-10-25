@@ -25,4 +25,4 @@ export interface Query extends ParsedQs {
 	IdTipoUsuario?: string;
 }
 
-export type SedeRequest = Request<Params, {}, Body, Query>;
+export type UsuarioRequest = Request<Params, {}, Body, Query>;

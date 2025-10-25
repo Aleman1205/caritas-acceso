@@ -14,11 +14,11 @@ export interface Body {
     Ids?: string[]; // para soportar delete
 }
 export interface Query extends ParsedQs {
-    IdTransaccion?: string;
-    Total?: number;
+    IdTransaccion?: string
+    Total?: string;
     Fecha?: string;
-    IdSede?: number;
-    IdServicio?: number;
+    IdSede?: string;
+    IdServicio?: string;
 }
 
-export type ParadaRequest = Request<Params, {}, Body, Query>;
+export type CompraRequest = Request<Params, {}, Body, Query>;
