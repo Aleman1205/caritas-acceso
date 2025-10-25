@@ -1,9 +1,5 @@
 import { pool } from "../../compartido/db/pool.js";
 
-/**
- * Controlador que devuelve todas las sedes junto con sus servicios
- * para la pantalla principal del app móvil.
- */
 export async function obtenerSedesConServicios(req, res) {
   try {
     const query = `
