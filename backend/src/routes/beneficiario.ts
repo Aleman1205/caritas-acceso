@@ -3,14 +3,15 @@ import BeneficiarioDbService from "../db/beneficiario.js";
 import BeneficiarioController from "../controllers/beneficiario.js";
 import BeneficiarioHttpHandler from "../handlers/beneficiario.js";
 import { dbPool } from "../config/db/mysql.js";
-import BeneficiarioValidadorRequest from "../utils/validadores/requests/beneficiario.js";
+import BeneficiarioValidador from "../utils/validadores/requests/beneficiario.js";
+
 
 const router = Router();
 
 // Wiring de dependencias
 const service = new BeneficiarioDbService(dbPool);
 const controller = new BeneficiarioController(service);
-const validadorRequest = new BeneficiarioValidadorRequest();
+const validadorRequest = new BeneficiarioValidador();
 const handler = new BeneficiarioHttpHandler(controller, validadorRequest);
 
 // Rutas

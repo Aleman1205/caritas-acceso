@@ -1,8 +1,8 @@
 import type { Request } from "express";
 import { isPositiveInt, isPositiveIntStringValid, isValidString, isValidTime } from "../../functions/typeValidation.js";
 import BaseValidadorRequest from "./base.js";
-import type { Sede } from "../../../types/db/Sede.js";
-import type { SedeRequest } from "../../../types/requests/Sede.js";
+import type { Sede } from "../../../types/db/sede.js";
+import type { SedeRequest } from "../../../types/requests/sede.js";
 
 export default class SedeValidador extends BaseValidadorRequest<Sede> {
 	public override isBody(obj: Request["body"]): boolean {

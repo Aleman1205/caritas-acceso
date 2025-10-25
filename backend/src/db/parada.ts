@@ -1,5 +1,5 @@
 import type { Pool, ResultSetHeader } from "mysql2/promise";
-import type { Parada } from "../types/db/Parada.js";
+import type { Parada } from "../types/db/parada.js";
 import BaseDbService from "./base.js";
 
 const ALLOWED_FIELDS = ["Id", "Nombre", "Descripcion", "Ubicacion", "Estatus"] as const;

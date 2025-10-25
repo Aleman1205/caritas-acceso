@@ -1,5 +1,5 @@
 import type BaseDbService from "../db/base.js";
-import type { Parada } from "../types/db/Parada.js";
+import type { Parada } from "../types/db/parada.js";
 import BaseController from "./base.js";
 
 export default class ParadaController extends BaseController<Parada, number> {

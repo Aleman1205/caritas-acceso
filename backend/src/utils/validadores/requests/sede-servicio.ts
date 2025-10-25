@@ -8,7 +8,7 @@ import {
 } from "../../functions/typeValidation.js";
 import { toBoolStrict } from "../../functions/toBoolStrict.js";
 import BaseValidadorRequest from "./base.js";
-import type { SedeServicio } from "../../../types/db/SedeServicio.js";
+import type { SedeServicio } from "../../../types/db/sede-servicio.js";
 import type { SedeServicioRequest } from "../../../types/requests/sede-servicio.js";
 
 export default class SedeServicioValidador extends BaseValidadorRequest<SedeServicio> {
