@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, Sede, Servicio, SedeServicio } from "@/lib/api";
 
+/* ========================= Utils ========================= */
 
-/* Util: normaliza cualquier respuesta a array */
 function asArray<T>(x: any): T[] {
   if (!x) return [];
   if (Array.isArray(x)) return x as T[];
@@ -12,7 +12,6 @@ function asArray<T>(x: any): T[] {
   return [];
 }
 
-/* Util: convierte id posiblemente string a number | undefined */
 function asNumId(v: unknown): number | undefined {
   if (typeof v === "number" && Number.isFinite(v)) return v;
   if (typeof v === "string" && v.trim() !== "" && !Number.isNaN(Number(v))) {
@@ -21,31 +20,88 @@ function asNumId(v: unknown): number | undefined {
   return undefined;
 }
 
+/* Normalizadores: backend (snake/minúsculas) -> tipos del front (PascalCase) */
+function normSede(r: any): Sede {
+  return {
+    Id: r?.id ?? r?.Id,
+    Nombre: r?.nombre ?? r?.Nombre,
+    Ciudad: r?.ciudad ?? r?.Ciudad,
+    Direccion: r?.direccion ?? r?.ubicacion ?? r?.Direccion,
+    Telefono: r?.telefono ?? r?.Telefono ?? null,
+    Estatus:
+      r?.estatus === true ||
+      r?.estatus === 1 ||
+      r?.Estatus === true ||
+      r?.Estatus === 1
+        ? true
+        : r?.estatus === false || r?.estatus === 0 || r?.Estatus === 0
+        ? false
+        : undefined,
+  };
+}
+
+function normServicio(r: any): Servicio {
+  return {
+    Id: r?.id ?? r?.Id,
+    Nombre: r?.nombre ?? r?.Nombre,
+    Descripcion: r?.descripcion ?? r?.Descripcion,
+    Estatus:
+      r?.estatus === true ||
+      r?.estatus === 1 ||
+      r?.Estatus === true ||
+      r?.Estatus === 1
+        ? true
+        : r?.estatus === false || r?.estatus === 0 || r?.Estatus === 0
+        ? false
+        : undefined,
+  };
+}
+
+function normAsignacion(r: any): SedeServicio {
+  return {
+    Id: r?.id ?? r?.Id,
+    IdSede: r?.idsede ?? r?.IdSede,
+    IdServicio: r?.idservicio ?? r?.IdServicio,
+    Descripcion: r?.descripcion ?? r?.Descripcion,
+    Capacidad: r?.capacidad ?? r?.Capacidad,
+    Precio: r?.precio ?? r?.Precio,
+    HoraInicio: r?.horainicio ?? r?.HoraInicio,
+    HoraFinal: r?.horafinal ?? r?.HoraFinal,
+    Estatus:
+      r?.estatus === true ||
+      r?.estatus === 1 ||
+      r?.Estatus === true ||
+      r?.Estatus === 1
+        ? true
+        : r?.estatus === false || r?.estatus === 0 || r?.Estatus === 0
+        ? false
+        : undefined,
+  };
+}
+
+/* ========================= Página ========================= */
+
 export default function SedesPage() {
-  // Datos base
   const [sedes, setSedes] = useState<Sede[]>([]);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [asignaciones, setAsignaciones] = useState<SedeServicio[]>([]);
 
-  // Formulario
   const [sedeSel, setSedeSel] = useState<number | undefined>();
   const [servSel, setServSel] = useState<number | undefined>();
-
-  // Cargando
   const [loading, setLoading] = useState(false);
 
   async function cargarTodo() {
     try {
       setLoading(true);
       const [sd, sv, as] = await Promise.all([
-        api.getSedes(),
-        api.getServicios(),
-        api.getSedeServicios(),
+        api.getSedes(),          // /web/sedeservicio/sedes
+        api.getServicios(),      // /web/sedeservicio/servicios
+        api.getSedeServicios(),  // /web/sedeservicio/asignaciones
       ]);
 
-      setSedes(asArray<Sede>(sd));
-      setServicios(asArray<Servicio>(sv));
-      setAsignaciones(asArray<SedeServicio>(as));
+      setSedes(asArray<any>(sd).map(normSede));
+      setServicios(asArray<any>(sv).map(normServicio));
+      setAsignaciones(asArray<any>(as).map(normAsignacion));
     } catch (e) {
       console.error("Error cargando datos:", e);
     } finally {
@@ -57,11 +113,10 @@ export default function SedesPage() {
     cargarTodo();
   }, []);
 
-  // Ciudades detectadas (Set para no repetir)
   const ciudades = useMemo(() => {
     const s = new Set<string>();
-    sedes.forEach((x: any) => {
-      const c = x?.Ciudad ?? x?.ciudad ?? x?.city;
+    sedes.forEach((x) => {
+      const c = x?.Ciudad;
       if (c) s.add(String(c));
     });
     return Array.from(s);
@@ -74,16 +129,12 @@ export default function SedesPage() {
 
     try {
       setLoading(true);
-      // Enviar Estatus:true para que quede Activa
+      // IMPORTANTE: el backend espera idsede / idservicio en minúsculas
       await api.createSedeServicio({
+        // los normalizo a minúsculas en api.ts, pero lo mando duplicado por claridad
         IdSede: idSede,
         IdServicio: idServicio,
         Estatus: true,
-        // Si quisieras, puedes enviar más campos:
-        // Capacidad: 0,
-        // Precio: 0,
-        // HoraInicio: "08:00",
-        // HoraFinal: "14:00",
       });
 
       setSedeSel(undefined);
@@ -99,8 +150,7 @@ export default function SedesPage() {
   async function eliminarAsignacion(id: number) {
     try {
       setLoading(true);
-      // El endpoint espera body: { Ids: number[] }
-      await api.deleteSedeServicios([id]);
+      await api.deleteSedeServicios([id]); // borra 1 a 1 por debajo
       await cargarTodo();
     } catch (e) {
       console.error("Error al eliminar asignación:", e);
@@ -109,12 +159,11 @@ export default function SedesPage() {
     }
   }
 
-  // Helpers para mostrar nombres en la tabla de asignaciones
   const nombreSede = (id?: number | string) => {
     const n = asNumId(id);
     const found = sedes.find((s) => asNumId(s?.Id) === n);
     return found?.Nombre ?? "-";
-  };
+    };
   const nombreServicio = (id?: number | string) => {
     const n = asNumId(id);
     const found = servicios.find((s) => asNumId(s?.Id) === n);
@@ -164,10 +213,7 @@ export default function SedesPage() {
             <tbody>
               {sedes.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-6 text-center text-gray-400"
-                  >
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
                     Sin resultados.
                   </td>
                 </tr>
@@ -175,15 +221,13 @@ export default function SedesPage() {
                 sedes.map((s) => (
                   <tr key={String(s.Id)} className="border-t border-gray-800">
                     <td className="px-4 py-3">{s.Nombre ?? "-"}</td>
-                    <td className="px-4 py-3">{(s as any).Ciudad ?? "-"}</td>
-                    <td className="px-4 py-3">{(s as any).Direccion ?? "-"}</td>
+                    <td className="px-4 py-3">{s.Ciudad ?? "-"}</td>
+                    <td className="px-4 py-3">{s.Direccion ?? "-"}</td>
                     <td className="px-4 py-3">{(s as any).Telefono ?? "-"}</td>
                     <td className="px-4 py-3">
-                      {(s as any).Estatus === true ||
-                      (s as any).Estatus === 1
+                      {s.Estatus === true
                         ? "Activa"
-                        : (s as any).Estatus === false ||
-                          (s as any).Estatus === 0
+                        : s.Estatus === false
                         ? "Inactiva"
                         : "—"}
                     </td>
@@ -202,11 +246,7 @@ export default function SedesPage() {
           <select
             className="rounded-md border border-gray-700 bg-gray-800/40 px-3 py-2 text-gray-100 outline-none"
             value={sedeSel ?? ""}
-            onChange={(e) =>
-              setSedeSel(
-                e.target.value ? Number(e.target.value) : undefined
-              )
-            }
+            onChange={(e) => setSedeSel(e.target.value ? Number(e.target.value) : undefined)}
           >
             <option value="">Selecciona sede</option>
             {sedes.map((s) => (
@@ -219,11 +259,7 @@ export default function SedesPage() {
           <select
             className="rounded-md border border-gray-700 bg-gray-800/40 px-3 py-2 text-gray-100 outline-none"
             value={servSel ?? ""}
-            onChange={(e) =>
-              setServSel(
-                e.target.value ? Number(e.target.value) : undefined
-              )
-            }
+            onChange={(e) => setServSel(e.target.value ? Number(e.target.value) : undefined)}
           >
             <option value="">Selecciona servicio</option>
             {servicios.map((s) => (
@@ -261,38 +297,26 @@ export default function SedesPage() {
               <tbody>
                 {asignaciones.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="px-4 py-6 text-center text-gray-400"
-                    >
+                    <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
                       Sin resultados.
                     </td>
                   </tr>
                 ) : (
                   asignaciones.map((a) => {
                     const estadoTxt =
-                      a.Estatus === true || (a as any).Estatus === 1
+                      a.Estatus === true
                         ? "Activa"
-                        : a.Estatus === false || (a as any).Estatus === 0
+                        : a.Estatus === false
                         ? "Inactiva"
                         : "—";
                     return (
-                      <tr
-                        key={String(a.Id)}
-                        className="border-t border-gray-800"
-                      >
-                        <td className="px-4 py-3">
-                          {nombreSede(a.IdSede)}
-                        </td>
-                        <td className="px-4 py-3">
-                          {nombreServicio(a.IdServicio)}
-                        </td>
+                      <tr key={String(a.Id)} className="border-t border-gray-800">
+                        <td className="px-4 py-3">{nombreSede(a.IdSede)}</td>
+                        <td className="px-4 py-3">{nombreServicio(a.IdServicio)}</td>
                         <td className="px-4 py-3">{estadoTxt}</td>
                         <td className="px-4 py-3">
                           <button
-                            onClick={() =>
-                              a?.Id && eliminarAsignacion(Number(a.Id))
-                            }
+                            onClick={() => a?.Id && eliminarAsignacion(Number(a.Id))}
                             className="rounded-md bg-rose-600 px-3 py-1.5 text-white hover:bg-rose-500"
                             disabled={loading}
                           >

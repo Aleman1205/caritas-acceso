@@ -13,6 +13,40 @@ export default class UsuarioHttpHandler extends BaseHttpHandler<Usuario, string>
 		super(controller, validadorRequest);
 	}
 
+<<<<<<< HEAD
+    protected override parseKey(params: Request["params"]): string | null {
+        return params?.Email ?? null;
+    }
+
+    public override async create(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            if (!this.validadorRequest.isBody(req.body)) throw new Error("Formato del body no válido.");
+            const usuario: Usuario = withDefaults<Usuario>(req.body, defaultUsuario);
+            const exitoso = await this.controller.create(usuario);
+            res.json({ exitoso });
+        } catch (error) { next(error); }
+    }
+
+    public async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const email = this.parseKey(req.params);
+        if (!email) {
+            res.status(400).json({ message: "Email no proporcionado" });
+            return;
+        }
+
+        const usuario = await this.controller.getById(email); // <-- Necesita existir en el controller
+        if (!usuario) {
+            res.status(404).json({ message: "Usuario no encontrado" });
+            return;
+        }
+
+        res.json(usuario);
+    } catch (error) {
+        next(error);
+        }
+    }
+=======
 	protected override parseKey(params: Request["params"]): string | null {
 		return params?.Email ? String(params.Email) : null;
 	}
@@ -34,4 +68,5 @@ export default class UsuarioHttpHandler extends BaseHttpHandler<Usuario, string>
 			next(error);
 		}
 	}
+>>>>>>> 01eb2562c65b7de91b64a50f4ff61bb6e5143fc5
 }

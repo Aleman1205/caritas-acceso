@@ -9,4 +9,8 @@ CREATE TABLE IF NOT EXISTS Reserva (
   FOREIGN KEY (IdSede) REFERENCES Sede(IdSede)
     ON DELETE SET NULL
     ON UPDATE CASCADE
+<<<<<<< HEAD
 );
+=======
+);
+>>>>>>> 01eb2562c65b7de91b64a50f4ff61bb6e5143fc5

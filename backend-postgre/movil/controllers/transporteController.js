@@ -14,7 +14,7 @@ export async function solicitarTransporte(req, res) {
       });
     }
 
-    // 🔍 Buscar reserva activa (sin normalizar)
+    // Buscar reserva activa (sin normalizar)
     const queryReserva = `
       SELECT r.idsede, b.nombre
       FROM reserva r
@@ -24,7 +24,7 @@ export async function solicitarTransporte(req, res) {
       ORDER BY r.fechainicio DESC
       LIMIT 1;
     `;
-    console.log("🔍 Ejecutando consulta de reserva...");
+    console.log("Ejecutando consulta de reserva...");
     const reservaResult = await pool.query(queryReserva, [telefono]);
     const rows = reservaResult.rows;
     console.log("🔍 Resultado de reserva:", rows);

@@ -1,8 +1,7 @@
 // src/lib/api.ts
 
-// ===== Base URL (usa rewrites; si no, define NEXT_PUBLIC_API_URL) =====
-const RAW_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "").trim();
-// sin slash final
+// ===== Base URL (usa NEXT_PUBLIC_API_URL; si no, fallback a backend local 3001) =====
+const RAW_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001").trim();
 const BASE_URL = RAW_BASE.replace(/\/+$/, "");
 
 // ===== Helpers =====
@@ -11,12 +10,9 @@ function qs(params?: Record<string, any>) {
   const entries = Object.entries(params).filter(
     ([, v]) => v !== undefined && v !== null && v !== ""
   );
-  return entries.length
-    ? `?${new URLSearchParams(entries as any).toString()}`
-    : "";
+  return entries.length ? `?${new URLSearchParams(entries as any).toString()}` : "";
 }
 
-// asegura "/" y evita dobles slashes, funciona con BASE_URL vacío
 function buildUrl(path: string) {
   const p = path.startsWith("/") ? path : `/${path}`;
   const url = `${BASE_URL}${p}` || p;
@@ -45,7 +41,7 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// ===== Tipos básicos (ajústalos si tu backend devuelve otros campos) =====
+// ===== Tipos básicos =====
 export type Sede = {
   Id?: number | string;
   Nombre?: string;
@@ -69,8 +65,8 @@ export type SedeServicio = {
   Descripcion?: string;
   Capacidad?: number;
   Precio?: number;
-  HoraInicio?: string; // "08:00"
-  HoraFinal?: string;  // "14:00"
+  HoraInicio?: string;
+  HoraFinal?: string;
   Estatus?: boolean;
 };
 
@@ -93,12 +89,67 @@ export type Beneficiario = { Telefono: string; IdTransaccion: string; Nombre?: s
 export type Reserva = { IdTransaccion: string; Estado?: string };
 export type Compra = { Id?: number | string };
 
+// ===== Tipos para búsqueda por teléfono =====
+export type ReservaTelefono = {
+  idTransaccion: string;
+  clave: string;
+  sede: string;
+  ubicacion: string;
+  ciudad: string;
+  fechaInicio: string | null;
+  fechaSalida: string | null;
+  horaCheckIn: string | null;
+  hombres: number | null;
+  mujeres: number | null;
+  status: "pendiente" | "en_estancia" | "finalizada" | "confirmada" | "cancelada";
+  telefono?: string | null;
+  beneficiario?: string | null;
+};
+
+// ===== Tipos Reseñas (web/resenas) =====
+export type ResenaWeb = {
+  id: number;
+  estrellas: number;
+  comentario: string;
+  idSede?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+type ApiResponse<T> = { success: boolean; message: string; data: T };
+
+// ===== Tipos Cupos (web/cupos) =====
+export type Cupo = {
+  id: number;
+  sede: string;
+  servicio: string;
+  capacidad: number;
+  precio: number;
+  horainicio: string; // "HH:MM:SS"
+  horafinal: string;  // "HH:MM:SS"
+  estatus: boolean;
+};
+
+// ===== Tipos Dashboard =====
+export type DashboardWeb = {
+  fecha: string;
+  totalReservas: number;
+  serviciosActivos: number;
+  sedesActivas: number;
+  resumenPorSede: Array<{
+    sedeid: number | string;
+    sede: string;
+    ciudad: string;
+    reservas: number;
+  }>;
+};
+
 // ======================================================================
 // ==========================   CLIENTE API   ============================
 // ======================================================================
 
 export const api = {
-  // -------- Usuarios (por si los usas después) --------
+  // -------- Usuarios --------
   crearUsuario: (b: Partial<Usuario>) =>
     http(`/api/usuarios/crear`, { method: "POST", body: JSON.stringify(b) }),
   getUsuarios: (f?: any) => http<Usuario[]>(`/api/usuarios/obtener${qs(f)}`),
@@ -109,43 +160,69 @@ export const api = {
     http(`/api/usuarios/eliminar`, { method: "DELETE", body: JSON.stringify({ Ids: ids }) }),
   deleteUsuario: (id: string | number) => api.deleteUsuarios([id]),
 
-  // -------- Sedes --------
-  getSedes: (f?: any) => http<Sede[]>(`/api/sedes/obtener${qs(f)}`),
-  getSedeById: (id: string | number) => http<Sede>(`/api/sedes/obtener/${id}`),
-  createSede: (b: Partial<Sede>) =>
-    http(`/api/sedes/crear`, { method: "POST", body: JSON.stringify(b) }),
-  updateSede: (id: string | number, b: Partial<Sede>) =>
-    http(`/api/sedes/modificar/${id}`, { method: "PUT", body: JSON.stringify(b) }),
-  deleteSedes: (ids: Array<string | number>) =>
-    http(`/api/sedes/eliminar`, { method: "DELETE", body: JSON.stringify({ Ids: ids }) }),
-  deleteSede: (id: string | number) => api.deleteSedes([id]),
+  // ===================== Sedes / Servicios / Asignaciones (WEB) =====================
+  // ¡OJO! Estas rutas usan /web/sedeservicio/* (sin ".routes")
+  getSedes: () =>
+    http<ApiResponse<any[]>>(`/web/sedeservicio/sedes`),
 
-  // -------- Servicios --------
-  getServicios: (f?: any) => http<Servicio[]>(`/api/servicios/obtener${qs(f)}`),
-  getServicioById: (id: string | number) => http<Servicio>(`/api/servicios/obtener/${id}`),
-  createServicio: (b: Partial<Servicio>) =>
-    http(`/api/servicios/crear`, { method: "POST", body: JSON.stringify(b) }),
-  updateServicio: (id: string | number, b: Partial<Servicio>) =>
-    http(`/api/servicios/modificar/${id}`, { method: "PUT", body: JSON.stringify(b) }),
-  // IMPORTANTE: deleteMany espera {Ids:[...]}
-  deleteServicios: (ids: Array<string | number>) =>
-    http(`/api/servicios/eliminar`, { method: "DELETE", body: JSON.stringify({ Ids: ids }) }),
-  deleteServicio: (id: string | number) => api.deleteServicios([id]),
+  getServicios: () =>
+    http<ApiResponse<any[]>>(`/web/sedeservicio/servicios`),
 
-  // -------- Sede-Servicios (PLURAL en el path) --------
-  getSedeServicios: (f?: any) =>
-    http<SedeServicio[]>(`/api/sede-servicios/obtener${qs(f)}`),
-  getSedeServicioById: (id: string | number) =>
-    http<SedeServicio>(`/api/sede-servicios/obtener/${id}`),
-  createSedeServicio: (b: Partial<SedeServicio>) =>
-    http(`/api/sede-servicios/crear`, { method: "POST", body: JSON.stringify(b) }),
-  updateSedeServicio: (id: string | number, b: Partial<SedeServicio>) =>
-    http(`/api/sede-servicios/modificar/${id}`, { method: "PUT", body: JSON.stringify(b) }),
+  // Asignaciones (sedeservicio)
+  getSedeServicios: () =>
+    http<ApiResponse<any[]>>(`/web/sedeservicio/asignaciones`),
+
+  createSedeServicio: (b: Partial<SedeServicio>) => {
+    // Adaptador: acepta IdSede/IdServicio y los traduce a idsede/idservicio
+    const payload = {
+      idsede: (b as any).idsede ?? b.IdSede,
+      idservicio: (b as any).idservicio ?? b.IdServicio,
+      descripcion: (b as any).descripcion ?? b.Descripcion ?? null,
+      capacidad: (b as any).capacidad ?? b.Capacidad ?? null,
+      precio: (b as any).precio ?? b.Precio ?? null,
+      horainicio: (b as any).horainicio ?? b.HoraInicio ?? null,
+      horafinal: (b as any).horafinal ?? b.HoraFinal ?? null,
+      estatus: (b as any).estatus ?? b.Estatus ?? true,
+    };
+    return http<ApiResponse<[]>>(`/web/sedeservicio/asignaciones`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateSedeServicio: (id: string | number, b: Partial<SedeServicio>) => {
+    const payload = {
+      idsede: (b as any).idsede ?? b.IdSede ?? null,
+      idservicio: (b as any).idservicio ?? b.IdServicio ?? null,
+      descripcion: (b as any).descripcion ?? b.Descripcion ?? null,
+      capacidad: (b as any).capacidad ?? b.Capacidad ?? null,
+      precio: (b as any).precio ?? b.Precio ?? null,
+      horainicio: (b as any).horainicio ?? b.HoraInicio ?? null,
+      horafinal: (b as any).horafinal ?? b.HoraFinal ?? null,
+      estatus: (b as any).estatus ?? b.Estatus ?? null,
+    };
+    return http<ApiResponse<[]>>(
+      `/web/sedeservicio/asignaciones/${encodeURIComponent(String(id))}`,
+      { method: "PUT", body: JSON.stringify(payload) }
+    );
+  },
+
   deleteSedeServicios: (ids: Array<string | number>) =>
-    http(`/api/sede-servicios/eliminar`, { method: "DELETE", body: JSON.stringify({ Ids: ids }) }),
-  deleteSedeServicio: (id: string | number) => api.deleteSedeServicios([id]),
+    Promise.all(
+      ids.map((id) =>
+        http<ApiResponse<[]>>(
+          `/web/sedeservicio/asignaciones/${encodeURIComponent(String(id))}`,
+          { method: "DELETE" }
+        )
+      )
+    ),
 
-  // -------- Paradas (por si luego las vuelves a usar) --------
+  deleteSedeServicio: (id: string | number) =>
+    http<ApiResponse<[]>>(`/web/sedeservicio/asignaciones/${encodeURIComponent(String(id))}`, {
+      method: "DELETE",
+    }),
+
+  // -------- Paradas (API genérica legacy) --------
   getParadas: (f?: any) => http<Parada[]>(`/api/paradas/obtener${qs(f)}`),
   getParadaById: (id: string | number) => http<Parada>(`/api/paradas/obtener/${id}`),
   createParada: (b: Partial<Parada>) =>
@@ -156,7 +233,46 @@ export const api = {
     http(`/api/paradas/eliminar`, { method: "DELETE", body: JSON.stringify({ Ids: ids }) }),
   deleteParada: (id: string | number) => api.deleteParadas([id]),
 
-  // -------- Rutas (nota: tu backend tiene un PUT /modificar sin :id para sincronizar) --------
+  // -------- Paradas (WEB) --------
+  getParadasWeb: () =>
+    http<ApiResponse<any[]>>(`/web/parada`),
+
+  getParadasBySedeWeb: (idSede: number | string) =>
+    http<ApiResponse<any[]>>(`/web/parada/sede/${encodeURIComponent(String(idSede))}`),
+
+  createParadaWeb: (body: {
+    nombre: string;
+    descripcion?: string | null;
+    ubicacion?: string | null;
+    estatus?: boolean;
+    idsede: number;
+  }) =>
+    http<ApiResponse<any>>(`/web/parada`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  updateParadaWeb: (
+    id: number | string,
+    body: Partial<{
+      nombre: string;
+      descripcion: string | null;
+      ubicacion: string | null;
+      estatus: boolean;
+      idsede: number;
+    }>
+  ) =>
+    http<ApiResponse<any>>(`/web/parada/${encodeURIComponent(String(id))}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+
+  deleteParadaWeb: (id: number | string) =>
+    http<ApiResponse<any>>(`/web/parada/${encodeURIComponent(String(id))}`, {
+      method: "DELETE",
+    }),
+
+  // -------- Rutas --------
   getRutas: (f?: { IdSedeServicio?: string | number; Estatus?: boolean; Orden?: number }) =>
     http<Ruta[]>(`/api/rutas/obtener${qs(f)}`),
   getRutaById: (id: string | number) => http<Ruta>(`/api/rutas/obtener/${id}`),
@@ -169,7 +285,7 @@ export const api = {
     http(`/api/rutas/eliminar`, { method: "DELETE", body: JSON.stringify({ Ids: ids }) }),
   deleteRuta: (id: string | number) => api.deleteRutas([id]),
 
-  // -------- Beneficiarios (clave compuesta) --------
+  // -------- Beneficiarios --------
   createBeneficiario: (b: Partial<Beneficiario>) =>
     http(`/api/beneficiarios/crear`, { method: "POST", body: JSON.stringify(b) }),
   getBeneficiarios: (f?: any) => http<Beneficiario[]>(`/api/beneficiarios/obtener${qs(f)}`),
@@ -183,12 +299,11 @@ export const api = {
       body: JSON.stringify(b),
     }),
   deleteBeneficiario: (tel: string, tx: string) =>
-    http(
-      `/api/beneficiarios/eliminar/${encodeURIComponent(tel)}/${encodeURIComponent(tx)}`,
-      { method: "DELETE" }
-    ),
+    http(`/api/beneficiarios/eliminar/${encodeURIComponent(tel)}/${encodeURIComponent(tx)}`, {
+      method: "DELETE",
+    }),
 
-  // -------- Reservas --------
+  // -------- Reservas (CRUD base) --------
   createReserva: (b: Partial<Reserva>) =>
     http(`/api/reservas/crear`, { method: "POST", body: JSON.stringify(b) }),
   getReservas: (f?: any) => http<Reserva[]>(`/api/reservas/obtener${qs(f)}`),
@@ -201,6 +316,45 @@ export const api = {
   deleteReservas: (ids: string[]) =>
     http(`/api/reservas/eliminar`, { method: "DELETE", body: JSON.stringify({ Ids: ids }) }),
 
+  // --- Reservas (web) ---
+  getReservasByTelefono: (tel: string) =>
+    http<ApiResponse<ReservaTelefono[]>>(`/web/reservas/${encodeURIComponent(tel)}`),
+  getReservasAll: () =>
+    http<ApiResponse<ReservaTelefono[]>>(`/web/reservas`),
+  getReservasFin: () =>
+    http<ApiResponse<ReservaTelefono[]>>(`/web/reservas/fin`),
+  deleteReservaWeb: (idTransaccion: string) =>
+    http<ApiResponse<[]>>(`/web/reservas/${encodeURIComponent(idTransaccion)}`, {
+      method: "DELETE",
+    }),
+
+  // -------- Reseñas (web) --------
+  getResenasWeb: (params?: { idSede?: number }) =>
+    http<ApiResponse<ResenaWeb[]>>(
+      `/web/resenas${params?.idSede ? `?idSede=${encodeURIComponent(params.idSede)}` : ""}`
+    ),
+
+  // -------- Servicio (web) – pantalla Servicios --------
+  getServiciosWeb: () =>
+    http<ApiResponse<Servicio[]>>(`/web/servicio`),
+  searchServiciosWeb: (q: string) =>
+    http<ApiResponse<Servicio[]>>(
+      `/web/servicio/search${q ? `?q=${encodeURIComponent(q)}` : ""}`
+    ),
+  getServicioWebById: (id: number | string) =>
+    http<ApiResponse<Servicio>>(`/web/servicio/id/${encodeURIComponent(String(id))}`),
+  createServicioWeb: (body: Partial<Servicio>) =>
+    http<ApiResponse<Servicio>>(`/web/servicio`, { method: "POST", body: JSON.stringify(body) }),
+  updateServicioWeb: (id: number | string, body: Partial<Servicio>) =>
+    http<ApiResponse<Servicio>>(`/web/servicio/${encodeURIComponent(String(id))}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  deleteServicioWeb: (id: number | string) =>
+    http<ApiResponse<[]>>(`/web/servicio/${encodeURIComponent(String(id))}`, {
+      method: "DELETE",
+    }),
+
   // -------- Compras --------
   createCompra: (b: Partial<Compra>) =>
     http(`/api/compras/crear`, { method: "POST", body: JSON.stringify(b) }),
@@ -210,5 +364,15 @@ export const api = {
     http(`/api/compras/modificar/${id}`, { method: "PUT", body: JSON.stringify(b) }),
   deleteCompras: (ids: Array<string | number>) =>
     http(`/api/compras/eliminar`, { method: "DELETE", body: JSON.stringify({ Ids: ids }) }),
-  deleteCompra: (id: string | number) => api.deleteCompras([id]),
+
+  // -------- Cupos (web) --------
+  getCupos: () => http<ApiResponse<Cupo[]>>(`/web/cupos`),
+  updateCupo: (id: number, body: Partial<Cupo>) =>
+    http<ApiResponse<[]>>(`/web/cupos/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+
+  // -------- Dashboard (web) --------
+  getDashboard: (fecha?: string) =>
+    http<ApiResponse<DashboardWeb>>(
+      `/web/dashboard${fecha ? `?fecha=${encodeURIComponent(fecha)}` : ""}`
+    ),
 };
